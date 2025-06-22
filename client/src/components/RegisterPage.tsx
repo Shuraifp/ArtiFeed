@@ -6,8 +6,11 @@ import MultiSelectField from "@/components/MultiSelectField";
 import Button from "@/components/Button";
 import { Calendar, Lock, Mail, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { register } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/handleApiError";
+import toast from "react-hot-toast";
 
-interface FormData {
+export interface FormData {
   firstName: string;
   lastName: string;
   email: string;
@@ -17,7 +20,6 @@ interface FormData {
   confirmPassword: string;
   preferences: string[];
 }
-
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -55,21 +57,41 @@ const RegisterPage = () => {
     }
   };
 
-  const handleMultiSelectChange = (e: { target: { name: string; value: string[] } }) => {
-  const { name, value } = e.target;
-  setFormData((prev) => ({ ...prev, [name]: value }));
-  if (errors[name as keyof typeof errors]) {
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  }
-};
+  const handleMultiSelectChange = (value: string[]) => {
+    setFormData((prev) => ({ ...prev, preferences: value }));
+    if (errors.preferences) {
+      setErrors((prev) => ({ ...prev, preferences: "" }));
+    }
+  };
 
   const validateForm = () => {
-    const newErrors: Partial<Omit<FormData, "preferences">> & { preferences?: string } = {};
+    const newErrors: Partial<Omit<FormData, "preferences">> & {
+      preferences?: string;
+    } = {};
     if (!formData.firstName) newErrors.firstName = "First name is required";
     if (!formData.lastName) newErrors.lastName = "Last name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.phone) newErrors.phone = "Phone is required";
-    if (!formData.dob) newErrors.dob = "Date of birth is required";
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Email format is invalid";
+    }
+    if (!formData.phone) {
+      newErrors.phone = "Phone is required";
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be 10 digits and valid";
+    }
+    if (!formData.dob) {
+      newErrors.dob = "Date of birth is required";
+    } else {
+      const dob = new Date(formData.dob);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      if (isNaN(dob.getTime())) {
+        newErrors.dob = "Invalid date format";
+      } else if (age < 13) {
+        newErrors.dob = "You must be at least 13 years old";
+      }
+    }
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
@@ -92,12 +114,15 @@ const RegisterPage = () => {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Registration Data:", formData);
+    try {
+      await register(formData);
       setLoading(false);
-      // Handle success - redirect to dashboard
-    }, 2000);
+      toast.success("Account created successfully!");
+      router.push("/dashboard");
+    } catch (error) {
+      setLoading(false);
+      handleApiError({error, router})
+    }
   };
 
   return (
@@ -136,6 +161,7 @@ const RegisterPage = () => {
             required
             error={errors.firstName}
             icon={<User className="w-5 h-5" />}
+            classNme="text-gray-700"
           />
           <InputField
             label="Last Name"
@@ -146,6 +172,7 @@ const RegisterPage = () => {
             required
             error={errors.lastName}
             icon={<User className="w-5 h-5" />}
+            classNme="text-gray-700"
           />
         </div>
 
@@ -158,6 +185,7 @@ const RegisterPage = () => {
           required
           error={errors.email}
           icon={<Mail className="w-5 h-5" />}
+          classNme="text-gray-700"
         />
 
         <InputField
@@ -169,6 +197,7 @@ const RegisterPage = () => {
           required
           error={errors.phone}
           icon={<Phone className="w-5 h-5" />}
+          classNme="text-gray-700"
         />
 
         <InputField
@@ -180,6 +209,7 @@ const RegisterPage = () => {
           required
           error={errors.dob}
           icon={<Calendar className="w-5 h-5" />}
+          classNme="text-gray-700"
         />
 
         <InputField
@@ -191,6 +221,7 @@ const RegisterPage = () => {
           required
           error={errors.password}
           icon={<Lock className="w-5 h-5" />}
+          classNme="text-gray-700"
         />
 
         <InputField
@@ -202,6 +233,7 @@ const RegisterPage = () => {
           required
           error={errors.confirmPassword}
           icon={<Lock className="w-5 h-5" />}
+          classNme="text-gray-700"
         />
 
         <MultiSelectField
@@ -213,7 +245,7 @@ const RegisterPage = () => {
           error={errors.preferences}
         />
 
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <input
             type="checkbox"
             required
@@ -229,7 +261,7 @@ const RegisterPage = () => {
               Privacy Policy
             </a>
           </span>
-        </div>
+        </div> */}
 
         <Button onClick={handleSubmit} loading={loading}>
           Create Account

@@ -3,11 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
+import { Toaster } from "react-hot-toast";
 
 const AuthPages = ({ page }: { page: string }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <Toaster />
       <div className="max-w-md w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

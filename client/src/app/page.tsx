@@ -15,6 +15,7 @@ import {
 import FloatingParticles from "@/components/FloatingParticles";
 import AnimatedNavbar from "@/components/Navbar";
 import FeaturesSection from "@/components/Features";
+import { Toaster } from "react-hot-toast";
 
 const HeroSection = () => {
   const { scrollY } = useScroll();
@@ -22,6 +23,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <Toaster />
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
         <div className="absolute inset-0 opacity-20">

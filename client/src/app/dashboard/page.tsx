@@ -9,6 +9,7 @@ import Settings from "@/pages/Settings";
 import MyArticles from "@/pages/MyArticle";
 import { PageKey } from "@/lib/types/article";
 import Profile from "@/pages/Profile";
+import { Toaster } from "react-hot-toast";
 
 const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState<PageKey>("dashboard");
@@ -16,6 +17,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
+      <Toaster />
       <Sidebar
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
