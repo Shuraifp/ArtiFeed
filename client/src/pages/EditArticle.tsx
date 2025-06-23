@@ -10,7 +10,7 @@ import { Article, categories, tagsOptions } from "@/lib/types/article";
 
 interface FormData {
   title: string;
-  description: string;
+  body: string;
   category: string;
   tags: string[];
   image: File | null;
@@ -19,20 +19,25 @@ interface FormData {
 
 interface FormErrors {
   title?: string;
-  description?: string;
+  body?: string;
   category?: string;
   tags?: string;
 }
 
-
-const EditArticle = ({ article,onClose }: { article: Article, onClose: () => void }) => {
+const EditArticle = ({
+  article,
+  onClose,
+}: {
+  article: Article;
+  onClose: () => void;
+}) => {
   const [formData, setFormData] = useState<FormData>({
-    title: article.title || "",
-    description: article.body || "",
-    category: article.category || "",
-    tags: article.tags || [],
+    title: article?.title || "",
+    body: article?.body || "",
+    category: article?.category || "",
+    tags: article?.tags || [],
     image: null,
-    existingImage: article.image || "",
+    existingImage: article?.image || "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -65,8 +70,8 @@ const EditArticle = ({ article,onClose }: { article: Article, onClose: () => voi
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.description)
-      newErrors.description = "Description is required";
+    if (!formData.body)
+      newErrors.body = "Body is required";
     if (!formData.category) newErrors.category = "Category is required";
     return newErrors;
   };
@@ -79,10 +84,9 @@ const EditArticle = ({ article,onClose }: { article: Article, onClose: () => voi
       return;
     }
     setLoading(true);
-    // Simulate API call
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.description);
+    formDataToSend.append("body", formData.body);
     formDataToSend.append("category", formData.category);
     formDataToSend.append("tags", JSON.stringify(formData.tags));
     if (formData.image) formDataToSend.append("image", formData.image);
@@ -114,20 +118,20 @@ const EditArticle = ({ article,onClose }: { article: Article, onClose: () => voi
           className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-10 border border-gray-100"
         >
           <div className="flex items-center justify-between mb-8 relative">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
-              <Edit className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
+                <Edit className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Edit Article
+              </h2>
             </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Edit Article
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-5 h-5" />
-          </button>
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -149,16 +153,16 @@ const EditArticle = ({ article,onClose }: { article: Article, onClose: () => voi
                 </label>
                 <motion.textarea
                   initial={{ height: "100px" }}
-                  animate={{ height: formData.description ? "auto" : "100px" }}
+                  animate={{ height: formData.body ? "auto" : "100px" }}
                   name="description"
-                  value={formData.description}
+                  value={formData.body}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 text-gray-900 resize-y min-h-[100px]"
                 />
-                {errors.description && (
+                {errors.body && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.description}
+                    {errors.body}
                   </p>
                 )}
               </div>
