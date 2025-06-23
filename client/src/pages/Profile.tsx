@@ -181,7 +181,7 @@ const Profile = () => {
                     article={article}
                     onLike={() => {}}
                     onDislike={() => {}}
-                    onShare={() => {}}
+                    // onShare={() => {}}
                     onView={() => {}}
                     onBlock={() => {}}
                   />

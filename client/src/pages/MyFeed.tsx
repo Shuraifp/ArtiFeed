@@ -11,8 +11,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from "@/lib/handleApiError";
 import { getPreferences } from "@/lib/api/preferences";
-import { getArticles,likeArticle, dislikeArticle, blockArticle } from "@/lib/api/article";
 
+import { getArticles,likeArticle, dislikeArticle, blockArticle } from "@/lib/api/article";
 
 export default function MyFeed() {
   const router = useRouter();

@@ -49,7 +49,16 @@ export const getArticleById = async (id: string) => {
 };
 
 // 5. Update Article
-export const updateArticle = async (id: string, updatedData: any) => {
+export const updateArticle = async (
+  id: string,
+  updatedData: {
+    title: string;
+    body: string;
+    category: string;
+    tags: string[];
+    image: string | null;
+  }
+) => {
   try {
     const res = await userInstance.put(`/article/articles/${id}`, updatedData);
     return res.data;
