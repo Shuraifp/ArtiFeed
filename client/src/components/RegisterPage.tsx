@@ -10,6 +10,7 @@ import { register } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/handleApiError";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import { getPreferencesForSignup } from "@/lib/api/preferences";
 
 export interface FormData {
   firstName: string;
@@ -25,6 +26,8 @@ export interface FormData {
 const RegisterPage = () => {
   const router = useRouter();
   const { user, login, loading } = useAuth();
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -39,16 +42,16 @@ const RegisterPage = () => {
     Partial<Omit<FormData, "preferences">> & { preferences?: string }
   >({});
 
-  const categories = [
-    "Sports",
-    "Politics",
-    "Space",
-    "Technology",
-    "Health",
-    "Business",
-    "Entertainment",
-    "Science",
-  ];
+  useEffect(() => {
+    (async () => {
+      try {
+        const { preferences } = await getPreferencesForSignup();
+        setCategoryList(preferences);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
+  }, [router, user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -124,11 +127,11 @@ const RegisterPage = () => {
     }
   };
 
- useEffect(() => {
-  if (user && !loading) {
-    router.push("/dashboard");
-  }
-}, [user, router, loading]);
+  useEffect(() => {
+    if (user && !loading) {
+      router.push("/dashboard");
+    }
+  }, [user, router, loading]);
 
   if (user) return null;
 
@@ -140,14 +143,14 @@ const RegisterPage = () => {
       className="w-full"
     >
       <div className="w-full max-w-md mx-auto mb-6">
-    <button
-      onClick={() => router.push("/")}
-      className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
-    >
-      <ArrowLeft className="w-4 h-4 mr-2" />
-      Back to Home
-    </button>
-  </div>
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </button>
+      </div>
 
       <div className="text-center mb-8">
         <motion.h1
@@ -255,7 +258,7 @@ const RegisterPage = () => {
 
         <MultiSelectField
           label="Article Interests"
-          options={categories}
+          options={categoryList}
           value={formData.preferences}
           onChange={handleMultiSelectChange}
           required

@@ -33,18 +33,29 @@ export const authenticateJWT = (requiredRole: "user" | "admin") => {
 
     const secretKey = process.env.JWT_SECRET || "secret";
 
-    jwt.verify(token, secretKey, async (err: VerifyErrors | null, decoded: any) => {
-      if (err) throw new ForbiddenError(StatusMessages.INVALID_TOKEN);
+    jwt.verify(
+      token,
+      secretKey,
+      async (err: VerifyErrors | null, decoded: any) => {
+        if (err) return next(new ForbiddenError(StatusMessages.INVALID_TOKEN));
 
-      const user = decoded as JWTPayload;
-      const dbUser = await User.findById(user.id).select("isBlocked role");
+        try {
+          const user = decoded as JWTPayload;
+          const dbUser = await User.findById(user.id).select("isBlocked role");
 
-      if (!dbUser) throw new UnauthorizedError(StatusMessages.USER_NOT_FOUND);
-      if (dbUser.isBlocked) throw new UnauthorizedError(StatusMessages.USER_BLOCKED);
-      if (dbUser.role !== requiredRole) throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
+          if (!dbUser)
+            return next(new UnauthorizedError(StatusMessages.USER_NOT_FOUND));
+          if (dbUser.isBlocked)
+            return next(new UnauthorizedError(StatusMessages.USER_BLOCKED));
+          if (dbUser.role !== requiredRole)
+            return next(new ForbiddenError(StatusMessages.PERMISSION_DENIED));
 
-      req.user = user;
-      next();
-    });
+          req.user = user;
+          next();
+        } catch (error) {
+          next(error);
+        }
+      }
+    );
   };
 };

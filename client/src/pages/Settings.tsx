@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import InputField from "@/components/InputField";
 import MultiSelectField from "@/components/MultiSelectField";
@@ -14,6 +14,12 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { UserFormData } from "@/lib/types/user";
+import { handleApiError } from "@/lib/handleApiError";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { getPreferences } from "@/lib/api/preferences";
+import toast from "react-hot-toast";
+import { getUserById, updateUser } from "@/lib/api/user";
 
 interface FormErrors {
   firstName?: string;
@@ -26,30 +32,51 @@ interface FormErrors {
   preferences?: string;
 }
 
-const categories = [
-  "Sports",
-  "Politics",
-  "Space",
-  "Technology",
-  "Health",
-  "Business",
-  "Entertainment",
-  "Science",
-];
-
 const Settings = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<UserFormData>({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "1234567890",
-    dob: "1990-01-01",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dob: "",
     password: "",
     confirmPassword: "",
-    preferences: ["Space", "Technology"],
+    preferences: [],
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLodingAction] = useState<boolean>(false);
+
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { preferences } = await getPreferences();
+        setCategoryList(preferences);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
+    (async () => {
+      try {
+        const { user }: { user: UserFormData } = await getUserById();
+        setFormData({
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          dob: user.dob || "",
+          password: "",
+          confirmPassword: "",
+          preferences: user.preferences || [],
+        });
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
+  }, [router, user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -66,11 +93,28 @@ const Settings = () => {
     const newErrors: FormErrors = {};
     if (!formData.firstName) newErrors.firstName = "First name is required";
     if (!formData.lastName) newErrors.lastName = "Last name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = "Invalid email format";
-    if (!formData.phone) newErrors.phone = "Phone is required";
-    if (!formData.dob) newErrors.dob = "Date of birth is required";
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Email format is invalid";
+    }
+    if (!formData.phone) {
+      newErrors.phone = "Phone is required";
+    } else if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be 10 digits and valid";
+    }
+    if (!formData.dob) {
+      newErrors.dob = "Date of birth is required";
+    } else {
+      const dob = new Date(formData.dob);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      if (isNaN(dob.getTime())) {
+        newErrors.dob = "Invalid date format";
+      } else if (age < 13) {
+        newErrors.dob = "You must be at least 13 years old";
+      }
+    }
     if (formData.password && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
@@ -81,18 +125,22 @@ const Settings = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setLodingAction(true);
     e.preventDefault();
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Settings Updated:", formData);
-      setLoading(false);
-    }, 2000);
+
+    try {
+      await updateUser(formData);
+      setLodingAction(false);
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      setLodingAction(false);
+      handleApiError({ error, router, user });
+    }
   };
 
   return (
@@ -141,6 +189,7 @@ const Settings = () => {
                   required
                   error={errors.firstName}
                   icon={<User className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
                 <InputField
                   label="Last Name"
@@ -151,6 +200,7 @@ const Settings = () => {
                   required
                   error={errors.lastName}
                   icon={<User className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
                 <InputField
                   label="Email"
@@ -161,6 +211,7 @@ const Settings = () => {
                   required
                   error={errors.email}
                   icon={<Mail className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
                 <InputField
                   label="Phone"
@@ -171,6 +222,7 @@ const Settings = () => {
                   required
                   error={errors.phone}
                   icon={<Phone className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
                 <InputField
                   label="Date of Birth"
@@ -181,6 +233,7 @@ const Settings = () => {
                   required
                   error={errors.dob}
                   icon={<Calendar className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
               </div>
             </div>
@@ -198,6 +251,7 @@ const Settings = () => {
                   onChange={handleInputChange}
                   error={errors.password}
                   icon={<Lock className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
                 <InputField
                   label="Confirm New Password"
@@ -207,6 +261,7 @@ const Settings = () => {
                   onChange={handleInputChange}
                   error={errors.confirmPassword}
                   icon={<Lock className="w-5 h-5 text-gray-500" />}
+                  classNme="text-gray-700"
                 />
               </div>
             </div>
@@ -217,7 +272,7 @@ const Settings = () => {
               </h3>
               <MultiSelectField
                 label="Preferred Categories"
-                options={categories}
+                options={categoryList}
                 value={formData.preferences}
                 onChange={handleMultiSelectChange}
                 required
@@ -232,7 +287,7 @@ const Settings = () => {
           >
             <Button
               onClick={() => {}}
-              loading={loading}
+              loading={loadingAction}
               className="w-full py-3 text-lg"
             >
               Save Changes

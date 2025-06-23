@@ -7,9 +7,15 @@ import AdminHeader from "@/components/AdminHeader";
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import { Settings, Trash2 } from "lucide-react";
-import { categories } from "@/lib/types/article";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import {
+  createPreference,
+  deletePreference,
+  fetchPreferences,
+} from "@/lib/api/preferences";
+import toast from "react-hot-toast";
+import { handleApiError } from "@/lib/handleApiError";
 
 const ManagePreferences = () => {
   const { admin, loading } = useAuth();
@@ -19,32 +25,55 @@ const ManagePreferences = () => {
   >("preferences");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
-  const [categoryList, setCategoryList] = useState<string[]>(categories);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
   const [error, setError] = useState("");
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategory) {
       setError("Category name is required");
       return;
     }
-    if (categoryList.includes(newCategory)) {
+    const exists = categoryList.some(
+      (it) => it.toLowerCase() === newCategory.toLowerCase()
+    );
+    if (exists) {
       setError("Category already exists");
       return;
     }
-    setCategoryList([...categoryList, newCategory]);
-    setNewCategory("");
+
     setError("");
-    // Call API to add category
+    try {
+      await createPreference(newCategory);
+      setCategoryList([...categoryList, newCategory]);
+      setNewCategory("");
+      toast.success("Preference created successfully!");
+    } catch (error) {
+      handleApiError({ error, router, admin });
+    }
   };
 
-  const handleDeleteCategory = (category: string) => {
-    setCategoryList(categoryList.filter((cat) => cat !== category));
-    // Call API to delete category
+  const handleDeleteCategory = async (category: string) => {
+    try {
+      await deletePreference(category);
+      setCategoryList((prev) => prev.filter((cat) => cat !== category));
+      toast.success(`Category "${category}" deleted successfully!`);
+    } catch (error) {
+      handleApiError({ error, router, admin });
+    }
   };
 
   useEffect(() => {
     if (!admin && !loading) {
       router.push("/admin/login");
+    } else if (admin) {
+      (async () => {
+        try {
+          const { preferences } = await fetchPreferences();
+          setCategoryList(preferences);
+        } catch (error) {
+          handleApiError({ error, router, admin });
+        }
+      })();
     }
   }, [admin, router, loading]);
 
@@ -104,6 +133,7 @@ const ManagePreferences = () => {
                       setError("");
                     }}
                     error={error}
+                    classNme="text-gray-700"
                   />
                   <motion.div
                     whileHover={{ scale: 1.05 }}

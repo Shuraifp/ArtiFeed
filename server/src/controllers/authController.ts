@@ -167,8 +167,7 @@ export const refreshToken = async (
   res: Response,
   role: string
 ) => {
-  console.log(process.env.NODE_ENV);
-  const refreshToken = req.cookies.userRefreshToken;
+  const refreshToken = role === Roles.User ? req.cookies.userRefreshToken : req.cookies.adminRefreshToken;
   if (!refreshToken) {
     throw new UnauthorizedError(StatusMessages.UNAUTHORIZED);
   }

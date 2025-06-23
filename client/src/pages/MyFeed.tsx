@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArticleCard from "@/components/ArticleCard";
 import MultiSelectField from "@/components/MultiSelectField";
 import ArticleViewModal from "@/components/ArticleViewModal";
 import { Rss, Compass } from "lucide-react";
-import { Article, categories } from "@/lib/types/article";
-
+import { Article } from "@/lib/types/article";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { handleApiError } from "@/lib/handleApiError";
+import { getPreferences } from "@/lib/api/preferences";
 
 const mockFollowingArticles: Article[] = [
   {
@@ -29,7 +32,7 @@ const mockFollowingArticles: Article[] = [
     category: "Sports",
     views: 800,
     publishedAt: "2025-06-17",
-    readTime:8,
+    readTime: 8,
     likes: 90,
     dislikes: 5,
     image: "/images/sports.jpg",
@@ -43,7 +46,7 @@ const mockExploreArticles: Article[] = [
     body: "The latest innovations in quantum computing...",
     category: "Technology",
     views: 500,
-    readTime:8,
+    readTime: 8,
     publishedAt: "2025-06-15",
     likes: 50,
     dislikes: 3,
@@ -55,7 +58,7 @@ const mockExploreArticles: Article[] = [
     body: "How sustainability is shaping the fashion industry...",
     category: "Business",
     views: 600,
-    readTime:8,
+    readTime: 8,
     publishedAt: "2025-06-16",
     likes: 70,
     dislikes: 2,
@@ -64,11 +67,26 @@ const mockExploreArticles: Article[] = [
 ];
 
 export default function MyFeed() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [filters, setFilters] = useState<string[]>([]);
   const [tab, setTab] = useState<"following" | "explore">("following");
   const [articles, setArticles] = useState<Article[]>(mockFollowingArticles);
-  const [exploreArticles, setExploreArticles] = useState<Article[]>(mockExploreArticles);
+  const [exploreArticles, setExploreArticles] =
+    useState<Article[]>(mockExploreArticles);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { preferences } = await getPreferences();
+        setCategoryList(preferences);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
+  }, [router, user]);
 
   const handleLike = (id: string) => {
     const updateArticles = (arts: Article[]) =>
@@ -82,7 +100,9 @@ export default function MyFeed() {
   const handleDislike = (id: string) => {
     const updateArticles = (arts: Article[]) =>
       arts.map((article) =>
-        article.id === id ? { ...article, dislikes: article.dislikes + 1 } : article
+        article.id === id
+          ? { ...article, dislikes: article.dislikes + 1 }
+          : article
       );
     setArticles(updateArticles(articles));
     setExploreArticles(updateArticles(exploreArticles));
@@ -109,7 +129,9 @@ export default function MyFeed() {
   };
 
   const filteredArticles = (arts: Article[]) =>
-    arts.filter((article) => filters.length === 0 || filters.includes(article.category));
+    arts.filter(
+      (article) => filters.length === 0 || filters.includes(article.category)
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
@@ -156,7 +178,7 @@ export default function MyFeed() {
           </div>
           <MultiSelectField
             label="Filter by Category"
-            options={categories}
+            options={categoryList}
             value={filters}
             onChange={handleFilterChange}
             error=""
@@ -182,27 +204,28 @@ export default function MyFeed() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10"
         >
           <AnimatePresence>
-            {(tab === "following" ? filteredArticles(articles) : filteredArticles(exploreArticles)).map(
-              (article, index) => (
-                <motion.div
-                  key={article.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1, duration: 0.4 }}
-                  layout
-                >
-                  <ArticleCard
-                    article={article}
-                    onLike={handleLike}
-                    onDislike={handleDislike}
-                    onShare={handleShare}
-                    onView={handleView}
-                    onBlock={handleBlock}
-                  />
-                </motion.div>
-              )
-            )}
+            {(tab === "following"
+              ? filteredArticles(articles)
+              : filteredArticles(exploreArticles)
+            ).map((article, index) => (
+              <motion.div
+                key={article.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                layout
+              >
+                <ArticleCard
+                  article={article}
+                  onLike={handleLike}
+                  onDislike={handleDislike}
+                  onShare={handleShare}
+                  onView={handleView}
+                  onBlock={handleBlock}
+                />
+              </motion.div>
+            ))}
           </AnimatePresence>
         </motion.div>
         {/* Article View Modal */}

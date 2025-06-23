@@ -9,17 +9,15 @@ adminInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
-
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
-        await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/refresh`, {
-          withCredentials: true,
-        });
+        await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/refresh`,
+          {
+            withCredentials: true,
+          }
+        );
 
         return adminInstance(originalRequest);
       } catch (refreshError) {

@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import InputField from "@/components/InputField";
 import MultiSelectField from "@/components/MultiSelectField";
 import Button from "@/components/Button";
 import { Upload, BookOpen, Newspaper } from "lucide-react";
-import { ArticleFormData, categories, tagsOptions } from "@/lib/types/article";
-
+import { ArticleFormData, tagsOptions } from "@/lib/types/article";
+import { getPreferences } from "@/lib/api/preferences";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { handleApiError } from "@/lib/handleApiError";
 
 interface FormErrors {
   title?: string;
@@ -16,8 +19,9 @@ interface FormErrors {
   tags?: string;
 }
 
-
 const CreateArticle = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<ArticleFormData>({
     title: "",
     body: "",
@@ -27,6 +31,18 @@ const CreateArticle = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { preferences } = await getPreferences();
+        setCategoryList(preferences);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
+  }, [router, user]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -56,8 +72,7 @@ const CreateArticle = () => {
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.body)
-      newErrors.description = "Description is required";
+    if (!formData.body) newErrors.description = "Description is required";
     if (!formData.category) newErrors.category = "Category is required";
     return newErrors;
   };
@@ -143,7 +158,7 @@ const CreateArticle = () => {
               </div>
               <MultiSelectField
                 label="Category"
-                options={categories}
+                options={categoryList}
                 value={formData.category ? [formData.category] : []}
                 onChange={handleCategoryChange}
                 required
