@@ -158,7 +158,7 @@ const ManageArticles = () => {
                           article={article}
                           onLike={() => {}}
                           onDislike={() => {}}
-                          onShare={() => {}}
+                          // onShare={() => {}}
                           onView={handleView}
                           onBlock={handleDelete}
                         />
@@ -207,7 +207,7 @@ const ManageArticles = () => {
                     onClose={() => setSelectedArticle(null)}
                     onLike={() => {}}
                     onDislike={() => {}}
-                    onShare={() => {}}
+                    // onShare={() => {}}
                   />
                 )}
               </AnimatePresence>
