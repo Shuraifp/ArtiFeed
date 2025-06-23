@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import InputField from "./InputField";
 import Button from "./Button";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import { loginUser } from "@/lib/api/auth";
+import toast from "react-hot-toast";
+import { handleApiError } from "@/lib/handleApiError";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
+  const { user, login, loading } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState<{
     identifier: string;
@@ -21,7 +25,6 @@ const LoginPage = () => {
     identifier?: string;
     password?: string;
   }>({});
-  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,14 +53,23 @@ const LoginPage = () => {
       return;
     }
 
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Login Data:", formData);
-      setLoading(false);
-      // Handle success - redirect to dashboard
-    }, 2000);
+    try {
+      const res = await loginUser(formData.identifier, formData.password);
+      login(res.user);
+      toast.success("Login successful!");
+      router.push("/dashboard");
+    } catch (error) {
+      handleApiError({ error, router });
+    }
   };
+
+  useEffect(() => {
+    if (user && !loading) {
+      router.push("/dashboard");
+    }
+  }, [user, router, loading]);
+
+  if (user) return null;
 
   return (
     <motion.div
@@ -66,6 +78,16 @@ const LoginPage = () => {
       exit={{ opacity: 0, x: 50 }}
       className="bg-white text-black dark:bg-white dark:text-black h-full flex flex-col items-center"
     >
+      <div className="w-full max-w-md mx-auto mb-6">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </button>
+      </div>
+
       <div className="text-center mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

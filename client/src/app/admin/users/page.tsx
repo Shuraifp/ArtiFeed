@@ -6,6 +6,8 @@ import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
 import { Users, Trash2, Edit } from "lucide-react";
 import { UserProfile } from "@/lib/types/user";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const mockUsers: UserProfile[] = [
   {
@@ -31,7 +33,11 @@ const mockUsers: UserProfile[] = [
 ];
 
 const ManageUsers = () => {
-  const [currentPage, setCurrentPage] = useState<"dashboard" | "users" | "articles" | "preferences" | "stats">("users");
+  const { admin, loading } = useAuth();
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState<
+    "dashboard" | "users" | "articles" | "preferences" | "stats"
+  >("users");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
 
@@ -44,6 +50,14 @@ const ManageUsers = () => {
     setUsers(users.filter((user) => user.email !== email));
     // Call API to delete user
   };
+
+  useEffect(() => {
+    if (!admin && !loading) {
+      router.push("/admin/login");
+    }
+  }, [admin, router, loading]);
+
+  if (!admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 lg:flex">
@@ -104,7 +118,9 @@ const ManageUsers = () => {
                       <p className="text-sm text-gray-500">
                         Preferences: {user.preferences.join(", ") || "None"}
                       </p>
-                      <p className="text-sm text-gray-500">Articles: {user.totalArticles}</p>
+                      <p className="text-sm text-gray-500">
+                        Articles: {user.totalArticles}
+                      </p>
                     </div>
                     <div className="flex space-x-2">
                       <motion.button

@@ -1,14 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
 import { BarChart2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const AdminDashboard = () => {
-  const [currentPage, setCurrentPage] = useState<"dashboard" | "users" | "articles" | "preferences" | "stats">("dashboard");
+  const { admin, loading } = useAuth();
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState<
+    "dashboard" | "users" | "articles" | "preferences" | "stats"
+  >("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!admin && !loading) {
+      router.push("/admin/login");
+    }
+  }, [admin, router, loading]);
+
+  if (!admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 lg:flex">
@@ -57,22 +71,34 @@ const AdminDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   className="p-6 bg-gray-50 rounded-xl text-center"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900">Manage Users</h3>
-                  <p className="text-sm text-gray-500 mt-2">View, edit, or delete user accounts.</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Manage Users
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2">
+                    View, edit, or delete user accounts.
+                  </p>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="p-6 bg-gray-50 rounded-xl text-center"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900">Manage Articles</h3>
-                  <p className="text-sm text-gray-500 mt-2">Moderate and manage all platform articles.</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Manage Articles
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Moderate and manage all platform articles.
+                  </p>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="p-6 bg-gray-50 rounded-xl text-center"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900">Website Stats</h3>
-                  <p className="text-sm text-gray-500 mt-2">Analyze platform-wide analytics.</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Website Stats
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Analyze platform-wide analytics.
+                  </p>
                 </motion.div>
               </div>
             </motion.div>

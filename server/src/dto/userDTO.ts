@@ -9,5 +9,4 @@ export interface UserDto {
   totalArticles: number;
   totalViews: number;
   totalLikes: number;
-  isBlocked: boolean;
 }

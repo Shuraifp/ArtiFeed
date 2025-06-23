@@ -1,23 +1,18 @@
 "use client";
 
-import {
-  motion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import {
-  ArrowRight,
-  Star,
-  Eye,
-  Shield,
-  ChevronDown,
-} from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, Star, Eye, Shield, ChevronDown } from "lucide-react";
 import FloatingParticles from "@/components/FloatingParticles";
 import AnimatedNavbar from "@/components/Navbar";
 import FeaturesSection from "@/components/Features";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const HeroSection = () => {
+  const { user } = useAuth();
+  const router = useRouter();
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 150]);
 
@@ -87,19 +82,27 @@ const HeroSection = () => {
               boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)",
             }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (!user) {
+                router.push("/login");
+              } else {
+                router.push("/dashboard");
+                toast.success("Welcome back to your dashboard!");
+              }
+            }}
             className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-lg font-semibold hover:shadow-2xl transition-all duration-300 flex items-center space-x-2"
           >
             <span>Start Your Journey</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </motion.button>
 
-          <motion.button
+          {/* <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300"
           >
             Watch Demo
-          </motion.button>
+          </motion.button> */}
         </motion.div>
 
         {/* Stats */}
@@ -148,7 +151,6 @@ const HeroSection = () => {
   );
 };
 
-
 // CTA Section
 const CTASection = () => {
   return (
@@ -185,17 +187,17 @@ const CTASection = () => {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-white text-blue-600 rounded-full font-bold text-lg hover:shadow-2xl transition-all duration-300 flex items-center space-x-2"
             >
-              <span>Create Your Account</span>
+              <Link href='/register'>Create Your Account</Link>
               <ArrowRight className="w-5 h-5" />
             </motion.button>
 
-            <motion.button
+            {/* <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 border-2 border-white/30 rounded-full font-bold text-lg hover:bg-white/10 transition-all duration-300"
             >
               Learn More
-            </motion.button>
+            </motion.button> */}
           </motion.div>
 
           {/* Trust Indicators */}

@@ -4,6 +4,10 @@ import { Dispatch, SetStateAction } from "react";
 import { motion } from "framer-motion";
 import { Menu, LogOut } from "lucide-react";
 import { AdminPageKey } from "@/lib/types/admin";
+import { adminLogout } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/handleApiError";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface AdminHeaderProps {
   sidebarOpen: boolean;
@@ -16,6 +20,8 @@ const AdminHeader = ({
   setSidebarOpen,
   currentPage,
 }: AdminHeaderProps) => {
+  const router = useRouter();
+  const { logoutAdmin, admin } = useAuth();
   const pageNames: Record<AdminPageKey, string> = {
     dashboard: "Admin Dashboard",
     users: "Manage Users",
@@ -32,10 +38,17 @@ const AdminHeader = ({
     stats: "View site-wide statistics and insights.",
   };
 
-  const handleLogout = () => {
-    // Simulate logout
-    console.log("Admin logged out");
-    // Redirect to /admin/login
+  const handleLogout = async () => {
+    try {
+      await adminLogout();
+      logoutAdmin();
+    } catch (error) {
+      handleApiError({
+        error,
+        router,
+        admin,
+      });
+    }
   };
 
   return (

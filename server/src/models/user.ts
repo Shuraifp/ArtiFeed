@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { Roles } from "../types/type";
 
 export interface IUser extends Document {
   email: string;
@@ -12,7 +13,7 @@ export interface IUser extends Document {
   totalViews: number;
   totalLikes: number;
   isBlocked: boolean;
-  role: "user" | "admin";
+  role: Roles;
   blockedArticles: string[];
 }
 
@@ -28,7 +29,7 @@ const UserSchema: Schema = new Schema({
   totalViews: { type: Number, default: 0 },
   totalLikes: { type: Number, default: 0 },
   isBlocked: { type: Boolean, default: false },
-  role: { type: String, enum: ["user", "admin"], default: "user" },
+  role: { type: String, enum: Roles, default: "user" },
   blockedArticles: [{ type: String, ref: "Article" }],
 });
 

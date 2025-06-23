@@ -1,14 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import InputField from "@/components/InputField";
 import MultiSelectField from "@/components/MultiSelectField";
 import Button from "@/components/Button";
-import { Calendar, Lock, Mail, Phone, User } from "lucide-react";
+import { ArrowLeft, Calendar, Lock, Mail, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/handleApiError";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export interface FormData {
   firstName: string;
@@ -23,6 +24,7 @@ export interface FormData {
 
 const RegisterPage = () => {
   const router = useRouter();
+  const { user, login, loading } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -36,7 +38,6 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState<
     Partial<Omit<FormData, "preferences">> & { preferences?: string }
   >({});
-  const [loading, setLoading] = useState(false);
 
   const categories = [
     "Sports",
@@ -113,17 +114,23 @@ const RegisterPage = () => {
       return;
     }
 
-    setLoading(true);
     try {
-      await register(formData);
-      setLoading(false);
+      const res = await register(formData);
+      login(res.user);
       toast.success("Account created successfully!");
       router.push("/dashboard");
     } catch (error) {
-      setLoading(false);
-      handleApiError({error, router})
+      handleApiError({ error, router });
     }
   };
+
+ useEffect(() => {
+  if (user && !loading) {
+    router.push("/dashboard");
+  }
+}, [user, router, loading]);
+
+  if (user) return null;
 
   return (
     <motion.div
@@ -132,6 +139,16 @@ const RegisterPage = () => {
       exit={{ opacity: 0, x: -50 }}
       className="w-full"
     >
+      <div className="w-full max-w-md mx-auto mb-6">
+    <button
+      onClick={() => router.push("/")}
+      className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors font-medium"
+    >
+      <ArrowLeft className="w-4 h-4 mr-2" />
+      Back to Home
+    </button>
+  </div>
+
       <div className="text-center mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

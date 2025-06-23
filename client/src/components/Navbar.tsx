@@ -4,8 +4,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { logoutUser } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/handleApiError";
+import { useRouter } from "next/navigation";
 
 const AnimatedNavbar = () => {
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -16,6 +22,19 @@ const AnimatedNavbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      logout();
+    } catch (error) {
+      handleApiError({
+        error,
+        router,
+        user,
+      });
+    }
+  };
 
   return (
     <motion.nav
@@ -56,18 +75,36 @@ const AnimatedNavbar = () => {
               whileTap={{ scale: 0.95 }}
               className="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors"
             >
-              <Link href="/login">Sign In</Link>
+              {!user ? (
+                <Link href="/login">Sign In</Link>
+              ) : (
+                <Link href="/dashboard">Dashboard</Link>
+              )}
             </motion.button>
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:shadow-lg transition-all"
-            >
-              <Link href="/register">Get Started</Link>
-            </motion.button>
+            {!user ? (
+              <motion.button
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:shadow-lg transition-all"
+              >
+                <Link href="/register">Get Started</Link>
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 10px 25px rgba(59, 130, 246, 0.3)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:shadow-lg transition-all"
+              >
+                <div>Logout</div>
+              </motion.button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

@@ -4,11 +4,12 @@ import User from "../models/user";
 import { UnauthorizedError, ForbiddenError } from "../utils/errors";
 import { HttpStatus } from "../utils/HTTPStatusCodes";
 import { StatusMessages } from "../utils/HTTPStatusMessages";
+import { Roles } from "../types/type";
 
-interface JWTPayload {
+export interface JWTPayload {
   id: string;
   email: string;
-  role: "user" | "admin";
+  role: Roles;
 }
 
 declare module "express" {

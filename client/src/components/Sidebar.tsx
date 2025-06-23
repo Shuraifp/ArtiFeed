@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageKey } from "@/lib/types/article";
-
+import { handleApiError } from "@/lib/handleApiError";
+import { logoutUser } from "@/lib/api/auth";
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
   currentPage: PageKey;
@@ -29,6 +31,7 @@ const Sidebar = ({
   setSidebarOpen,
 }: SidebarProps) => {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
   const menuItems = [
     { icon: Home, label: "Dashboard", key: "dashboard" },
@@ -48,6 +51,19 @@ const Sidebar = ({
     }
     return () => window.removeEventListener("resize", handleResize);
   }, [setSidebarOpen]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      logout();
+    } catch (error) {
+      handleApiError({
+        error,
+        router,
+        user
+      });
+    }
+  };
 
   return (
     <>
@@ -121,6 +137,9 @@ const Sidebar = ({
         <div className="p-6 border-t border-gray-200">
           <motion.button
             whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              handleLogout();
+            }}
             className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
           >
             <LogOut className="w-5 h-5" />

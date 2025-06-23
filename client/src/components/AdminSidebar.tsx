@@ -8,11 +8,11 @@ import {
   FileText,
   Settings,
   X,
-  LogOut,
   BookOpen,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AdminPageKey } from "@/lib/types/admin";
+import { Toaster } from "react-hot-toast";
 
 interface AdminSidebarProps {
   currentPage: AdminPageKey;
@@ -30,11 +30,31 @@ const AdminSidebar = ({
   const router = useRouter();
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
   const menuItems = [
-    { icon: BarChart2, label: "Dashboard", key: "dashboard", href: "/admin/dashboard" },
+    {
+      icon: BarChart2,
+      label: "Dashboard",
+      key: "dashboard",
+      href: "/admin/dashboard",
+    },
     { icon: Users, label: "Manage Users", key: "users", href: "/admin/users" },
-    { icon: FileText, label: "Manage Articles", key: "articles", href: "/admin/articles" },
-    { icon: Settings, label: "Preferences", key: "preferences", href: "/admin/preferences" },
-    { icon: BarChart2, label: "Website Stats", key: "stats", href: "/admin/stats" },
+    {
+      icon: FileText,
+      label: "Manage Articles",
+      key: "articles",
+      href: "/admin/articles",
+    },
+    {
+      icon: Settings,
+      label: "Preferences",
+      key: "preferences",
+      href: "/admin/preferences",
+    },
+    {
+      icon: BarChart2,
+      label: "Website Stats",
+      key: "stats",
+      href: "/admin/stats",
+    },
   ];
 
   useEffect(() => {
@@ -51,6 +71,7 @@ const AdminSidebar = ({
 
   return (
     <>
+      <Toaster />
       {/* Mobile Overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -116,17 +137,6 @@ const AdminSidebar = ({
               </motion.button>
             ))}
           </nav>
-        </div>
-
-        {/* Logout at the bottom */}
-        <div className="p-6 border-t border-gray-200">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
-          </motion.button>
         </div>
       </motion.div>
     </>

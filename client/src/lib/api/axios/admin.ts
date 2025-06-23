@@ -17,7 +17,7 @@ adminInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/refresh`, {
+        await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/admin/refresh`, {
           withCredentials: true,
         });
 

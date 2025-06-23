@@ -8,6 +8,8 @@ import ArticleCard from "@/components/ArticleCard";
 import ArticleViewModal from "@/components/ArticleViewModal";
 import { FileText, Trash2, Flag } from "lucide-react";
 import { Article } from "@/lib/types/article";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface AdminArticle extends Article {
   status: "published" | "flagged" | "draft";
@@ -43,10 +45,16 @@ const mockArticles: AdminArticle[] = [
 ];
 
 const ManageArticles = () => {
-  const [currentPage, setCurrentPage] = useState<"dashboard" | "users" | "articles" | "preferences" | "stats">("articles");
+  const router = useRouter();
+  const { admin, loading } = useAuth();
+  const [currentPage, setCurrentPage] = useState<
+    "dashboard" | "users" | "articles" | "preferences" | "stats"
+  >("articles");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [articles, setArticles] = useState<AdminArticle[]>([]);
-  const [selectedArticle, setSelectedArticle] = useState<AdminArticle | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<AdminArticle | null>(
+    null
+  );
 
   useEffect(() => {
     // Simulate API call
@@ -61,7 +69,12 @@ const ManageArticles = () => {
   const handleFlag = (id: string) => {
     setArticles(
       articles.map((article) =>
-        article.id === id ? { ...article, status: article.status === "flagged" ? "published" : "flagged" } : article
+        article.id === id
+          ? {
+              ...article,
+              status: article.status === "flagged" ? "published" : "flagged",
+            }
+          : article
       )
     );
     // Call API to update article status
@@ -71,6 +84,14 @@ const ManageArticles = () => {
     const article = articles.find((a) => a.id === id);
     if (article) setSelectedArticle(article);
   };
+
+  useEffect(() => {
+    if (!admin && !loading) {
+      router.push("/admin/login");
+    }
+  }, [admin, router, loading]);
+
+  if (!admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 lg:flex">
@@ -115,7 +136,8 @@ const ManageArticles = () => {
                 </h2>
               </div>
               <p className="text-sm text-gray-500 mb-6">
-                Moderate and manage all articles on ArticleFeeds. Flag or remove content as needed.
+                Moderate and manage all articles on ArticleFeeds. Flag or remove
+                content as needed.
               </p>
               <motion.div
                 layout
@@ -145,8 +167,16 @@ const ManageArticles = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleFlag(article.id)}
-                            className={`p-2 ${article.status === "flagged" ? "bg-yellow-600" : "bg-gray-600"} text-white rounded-xl`}
-                            aria-label={article.status === "flagged" ? `Unflag article ${article.title}` : `Flag article ${article.title}`}
+                            className={`p-2 ${
+                              article.status === "flagged"
+                                ? "bg-yellow-600"
+                                : "bg-gray-600"
+                            } text-white rounded-xl`}
+                            aria-label={
+                              article.status === "flagged"
+                                ? `Unflag article ${article.title}`
+                                : `Flag article ${article.title}`
+                            }
                           >
                             <Flag className="w-5 h-5" />
                           </motion.button>

@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import { Mail, Lock } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { adminLogin } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/handleApiError";
+import toast from "react-hot-toast";
 
 interface AdminCredentials {
   email: string;
@@ -17,9 +22,13 @@ interface FormErrors {
 }
 
 const AdminLogin = () => {
-  const [formData, setFormData] = useState<AdminCredentials>({ email: "", password: "" });
+  const { admin, loading, loginAdmin } = useAuth();
+  const router = useRouter();
+  const [formData, setFormData] = useState<AdminCredentials>({
+    email: "",
+    password: "",
+  });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -43,14 +52,24 @@ const AdminLogin = () => {
       setErrors(newErrors);
       return;
     }
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Admin Login:", formData);
-      setLoading(false);
-      // Redirect to /admin/dashboard
-    }, 2000);
+
+    try {
+      const res = await adminLogin(formData.email, formData.password);
+      loginAdmin(res.user);
+      toast.success("Login successful!");
+      router.push("/admin/dashboard");
+    } catch (error) {
+      handleApiError({ error, router });
+    }
   };
+
+  useEffect(() => {
+    if (admin && !loading) {
+      router.push("/admin/dashboard");
+    }
+  }, [admin, router, loading]);
+
+  if (admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4">
@@ -78,7 +97,7 @@ const AdminLogin = () => {
             required
             error={errors.email}
             icon={<Mail className="w-5 h-5 text-gray-500" />}
-            classNme={'text-gray-700'}
+            classNme={"text-gray-700"}
           />
           <InputField
             label="Password"
@@ -88,13 +107,10 @@ const AdminLogin = () => {
             onChange={handleInputChange}
             required
             error={errors.password}
-            icon={<Lock className="w-5 h-5 text-gray-500"/>}
-            classNme={'text-gray-700'} 
+            icon={<Lock className="w-5 h-5 text-gray-500" />}
+            classNme={"text-gray-700"}
           />
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={() => {}}
               loading={loading}

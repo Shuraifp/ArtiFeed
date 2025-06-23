@@ -12,5 +12,4 @@ export const toUserDto = (user: IUser): UserDto => ({
   totalArticles: user.totalArticles,
   totalViews: user.totalViews,
   totalLikes: user.totalLikes,
-  isBlocked: user.isBlocked,
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
@@ -8,8 +8,12 @@ import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import { Settings, Trash2 } from "lucide-react";
 import { categories } from "@/lib/types/article";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const ManagePreferences = () => {
+  const { admin, loading } = useAuth();
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState<
     "dashboard" | "users" | "articles" | "preferences" | "stats"
   >("preferences");
@@ -37,6 +41,14 @@ const ManagePreferences = () => {
     setCategoryList(categoryList.filter((cat) => cat !== category));
     // Call API to delete category
   };
+
+  useEffect(() => {
+    if (!admin && !loading) {
+      router.push("/admin/login");
+    }
+  }, [admin, router, loading]);
+
+  if (!admin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 lg:flex">
