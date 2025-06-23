@@ -9,29 +9,6 @@ import { UserProfile } from "@/lib/types/user";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
-const mockUsers: UserProfile[] = [
-  {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    dob: "1990-01-01",
-    preferences: ["Space", "Technology"],
-    totalArticles: 3,
-    totalViews: 2500,
-    totalLikes: 290,
-  },
-  {
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    dob: "1985-05-15",
-    preferences: ["Politics", "Business"],
-    totalArticles: 5,
-    totalViews: 4000,
-    totalLikes: 500,
-  },
-];
-
 const ManageUsers = () => {
   const { admin, loading } = useAuth();
   const router = useRouter();
@@ -43,7 +20,7 @@ const ManageUsers = () => {
 
   useEffect(() => {
     // Simulate API call
-    setUsers(mockUsers);
+    setUsers([]);
   }, []);
 
   const handleDelete = (email: string) => {
