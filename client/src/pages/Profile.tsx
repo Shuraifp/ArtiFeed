@@ -6,18 +6,10 @@ import ArticleCard from "@/components/ArticleCard";
 import { User, Mail, Calendar, Tag } from "lucide-react";
 import { Article } from "@/lib/types/article";
 import { UserProfile } from "@/lib/types/user";
-
-// Mock data (replace with API call)
-const mockFetchProfile = (): UserProfile => ({
-  firstName: "John",
-  lastName: "Doe",
-  email: "john.doe@example.com",
-  dob: "1990-01-01",
-  preferences: ["Space", "Technology"],
-  totalArticles: 3,
-  totalViews: 2500,
-  totalLikes: 290,
-});
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { getUserById } from "@/lib/api/user";
+import { handleApiError } from "@/lib/handleApiError";
 
 const mockUserArticles: Article[] = [
   {
@@ -59,14 +51,32 @@ const mockUserArticles: Article[] = [
 ];
 
 const Profile = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    // Simulate API call
-    setProfile(mockFetchProfile());
+    (async () => {
+      try {
+        const { user }: { user: UserProfile } = await getUserById();
+        setProfile({
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          email: user.email,
+          phone: user.phone,
+          dob: user.dob,
+          totalArticles: user.totalArticles || 0,
+          totalViews: user.totalViews || 0,
+          totalLikes: user.totalLikes || 0,
+          preferences: user.preferences || [],
+        });
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
     setArticles(mockUserArticles);
-  }, []);
+  }, [router, user]);
 
   if (!profile) return null;
 

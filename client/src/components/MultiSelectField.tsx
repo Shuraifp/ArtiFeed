@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
 
@@ -23,6 +23,10 @@ const MultiSelectField = ({
 }: MultiSelectFieldProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState(value || []);
+
+  useEffect(() => {
+    setSelectedItems(value || []);
+  }, [value]);
 
   const handleToggleItem = (item: string) => {
     const newSelection = selectedItems.includes(item)

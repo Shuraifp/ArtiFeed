@@ -129,6 +129,7 @@ const Settings = () => {
     e.preventDefault();
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
+      setLodingAction(false)
       setErrors(newErrors);
       return;
     }

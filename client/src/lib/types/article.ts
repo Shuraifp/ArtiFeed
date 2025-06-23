@@ -19,7 +19,7 @@ export interface ArticleFormData {
   body: string;
   category: string;
   tags: string[];
-  image: File | null;
+  image: string | null;
 }
 
 export const categories = [

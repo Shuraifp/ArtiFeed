@@ -2,7 +2,7 @@
 
 import { Article } from "@/lib/types/article";
 import { motion } from "framer-motion";
-import { X, ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
+import { X, ThumbsUp, ThumbsDown } from "lucide-react";
 
 
 interface ArticleViewModalProps {
@@ -10,7 +10,7 @@ interface ArticleViewModalProps {
   onClose: () => void;
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
-  onShare: (id: string) => void;
+  // onShare: (id: string) => void;
 }
 
 const ArticleViewModal = ({
@@ -18,7 +18,7 @@ const ArticleViewModal = ({
   onClose,
   onLike,
   onDislike,
-  onShare,
+  // onShare,
 }: ArticleViewModalProps) => {
   return (
     <motion.div
@@ -86,13 +86,13 @@ const ArticleViewModal = ({
               <ThumbsDown className="w-5 h-5" />
               <span>{article.dislikes}</span>
             </button>
-            <button
+            {/* <button
               onClick={() => onShare(article.id)}
               className="flex items-center space-x-1 text-gray-500 hover:text-purple-600"
             >
               <Share2 className="w-5 h-5" />
               <span>Share</span>
-            </button>
+            </button> */}
           </div>
         </div>
       </motion.div>

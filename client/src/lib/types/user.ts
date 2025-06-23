@@ -15,6 +15,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   dob: string;
   preferences: string[];
   totalArticles: number;

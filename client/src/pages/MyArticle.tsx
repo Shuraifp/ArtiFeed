@@ -1,58 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit, Trash2, X, Home } from "lucide-react";
 import EditArticle from "./EditArticle";
 import { Article } from "@/lib/types/article";
-
-// Mock data
-const mockUserArticles: Article[] = [
-  {
-    id: "1",
-    title: "The Future of Space Exploration",
-    category: "Space",
-    views: 1200,
-    body:
-      "Exploring the latest advancements in space technology and missions.",
-    tags: ["Space", "Exploration", "Technology"],
-    likes: 150,
-    dislikes: 10,
-    publishedAt: "2025-06-18",
-    image: "/images/space.jpg",
-  },
-  {
-    id: "2",
-    title: "AI in Sports Analytics",
-    category: "Sports",
-    views: 800,
-  body:
-      "How artificial intelligence is transforming sports analytics and performance.",
-    tags: ["AI", "Sports", "Analytics"],
-    likes: 90,
-    dislikes: 5,
-    publishedAt: "2025-06-17",
-    image: "/images/sports.jpg",
-  },
-  {
-    id: "3",
-    title: "Quantum Computing Breakthroughs",
-    category: "Technology",
-    views: 500,
-    body:
-      "Recent breakthroughs in quantum computing and their implications for the future.",
-    tags: ["Quantum Computing", "Technology", "Innovation"],
-    likes: 50,
-    dislikes: 3,
-    publishedAt: "2025-06-15",
-  },
-];
+import { getUserArticles } from "@/lib/api/article";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { handleApiError } from "@/lib/handleApiError";
 
 const MyArticles = () => {
-  const [articles, setArticles] = useState<Article[]>(mockUserArticles);
+  const router = useRouter();
+  const { user } = useAuth();
+  const [articles, setArticles] = useState<Article[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 6;
+
+  useEffect(() => {
+    const getArticles = async () => {
+      try {
+        const data = await getUserArticles(page, limit);
+        console.log(data)
+        setArticles(data.articles);
+        setTotalPages(data.totalPages);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    };
+
+    getArticles();
+  }, [page, router, user]);
 
   const handleDelete = (id: string) => {
     setDeleteId(id);
@@ -132,7 +114,7 @@ const MyArticles = () => {
                   <span>{article.views} views</span> •{" "}
                   <span>{article.likes} likes</span> •{" "}
                   <span>{article.dislikes} dislikes</span> •{" "}
-                  <span>{article.publishedAt}</span>
+                  <span>{new Date(article.publishedAt).toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <motion.button
@@ -157,6 +139,25 @@ const MyArticles = () => {
             </motion.div>
           ))}
         </motion.div>
+      </div>
+      <div className="flex justify-center mt-8 space-x-4">
+        <button
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1}
+          className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2 text-gray-700 font-medium">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+          disabled={page === totalPages}
+          className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
       {/* Delete Confirmation Modal */}
       <AnimatePresence>

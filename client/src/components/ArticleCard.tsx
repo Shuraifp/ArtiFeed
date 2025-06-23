@@ -1,18 +1,18 @@
 import { Article } from "@/lib/types/article";
 import { motion } from "framer-motion";
-import { Eye, Clock, ThumbsUp, ThumbsDown, Share2, XCircle } from "lucide-react";
+import { Eye, Clock, ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 
 
 interface ArticleCardProps {
   article: Article;
   onLike: (id: string) => void;
   onDislike: (id: string) => void;
-  onShare: (id: string) => void;
+  // onShare: (id: string) => void;
   onView: (id: string) => void;
   onBlock: (id: string) => void;
 }
 
-const ArticleCard = ({ article, onLike, onDislike, onShare, onView, onBlock }: ArticleCardProps) => {
+const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ const ArticleCard = ({ article, onLike, onDislike, onShare, onView, onBlock }: A
         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer" onClick={() => onView(article.id)}>
           {article.title}
         </h3>
-        <p className="text-gray-600 mb-4 line-clamp-3">{article.body}</p>
+        <p className="text-gray-600 mb-4 line-clamp-2">{article.body}</p>
 
         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
           <div className="flex items-center space-x-4">
@@ -55,11 +55,11 @@ const ArticleCard = ({ article, onLike, onDislike, onShare, onView, onBlock }: A
               {article.readTime} min read
             </span>
           </div>
-          <span>{article.publishedAt}</span>
+          <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button
               onClick={() => onLike(article.id)}
               className="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
@@ -74,13 +74,13 @@ const ArticleCard = ({ article, onLike, onDislike, onShare, onView, onBlock }: A
               <ThumbsDown className="w-5 h-5" />
               <span>{article.dislikes}</span>
             </button>
-            <button
+            {/* <button
               onClick={() => onShare(article.id)}
               className="flex items-center space-x-1 text-gray-500 hover:text-purple-600"
             >
               <Share2 className="w-5 h-5" />
               <span>Share</span>
-            </button>
+            </button> */}
           </div>
           <button
             onClick={() => onView(article.id)}

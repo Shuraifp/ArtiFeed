@@ -11,10 +11,12 @@ import { getPreferences } from "@/lib/api/preferences";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from "@/lib/handleApiError";
+import { createArticle } from "@/lib/api/article";
+import toast from "react-hot-toast";
 
 interface FormErrors {
   title?: string;
-  description?: string;
+  body?: string;
   category?: string;
   tags?: string;
 }
@@ -63,16 +65,22 @@ const CreateArticle = () => {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files[0]) {
-      setFormData((prev) => ({ ...prev, image: files[0] }));
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          image: reader.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
-
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.body) newErrors.description = "Description is required";
+    if (!formData.body) newErrors.body = "Body is required";
     if (!formData.category) newErrors.category = "Category is required";
     return newErrors;
   };
@@ -85,7 +93,6 @@ const CreateArticle = () => {
       return;
     }
     setLoading(true);
-    // Simulate API call
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
     formDataToSend.append("description", formData.body);
@@ -93,11 +100,14 @@ const CreateArticle = () => {
     formDataToSend.append("tags", JSON.stringify(formData.tags));
     if (formData.image) formDataToSend.append("image", formData.image);
 
-    setTimeout(() => {
-      console.log("Article Created:", formData);
+    try {
+      await createArticle(formData);
       setLoading(false);
-      // Redirect or clear form
-    }, 2000);
+      toast.success("Article created successfully!");
+    } catch (error) {
+      setLoading(false);
+      handleApiError({ error, router, user });
+    }
   };
 
   return (
@@ -144,16 +154,13 @@ const CreateArticle = () => {
                 <motion.textarea
                   initial={{ height: "100px" }}
                   animate={{ height: formData.body ? "auto" : "100px" }}
-                  name="description"
+                  name="body"
                   value={formData.body}
                   onChange={handleInputChange}
-                  required
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 text-gray-900 resize-y min-h-[100px]"
                 />
-                {errors.description && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.description}
-                  </p>
+                {errors.body && (
+                  <p className="text-red-500 text-sm mt-1">{errors.body}</p>
                 )}
               </div>
               <MultiSelectField
@@ -180,14 +187,22 @@ const CreateArticle = () => {
                   className="flex items-center justify-center w-full"
                 >
                   <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-white/50 hover:bg-gray-50 transition-all">
-                    <div className="flex flex-col items-center justify-center py-6">
-                      <Upload className="w-10 h-10 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600">
-                        {formData.image
-                          ? formData.image.name
-                          : "Drag and drop or click to upload an image"}
-                      </p>
-                    </div>
+                    {formData.image ? (
+                      <div className="w-full h-40 flex items-center justify-center">
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="h-full object-contain rounded-xl"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-6">
+                        <Upload className="w-10 h-10 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">
+                          Drag and drop or click to upload an image
+                        </p>
+                      </div>
+                    )}
                     <input
                       type="file"
                       className="hidden"

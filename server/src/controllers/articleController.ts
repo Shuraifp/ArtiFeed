@@ -1,40 +1,113 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import Article from "../models/article";
 import User from "../models/user";
-import { ForbiddenError, NotFoundError } from "../utils/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../utils/errors";
 import { HttpStatus } from "../utils/HTTPStatusCodes";
 import { StatusMessages } from "../utils/HTTPStatusMessages";
+import { toArticleDto } from "../mappers/articleMapper";
+import ArticleReaction, { ReactionStatus } from "../models/articleReaction";
 
-export const createArticle = async (req: Request, res: Response) => {
-  const { title, body, category, image, readTime, tags, publishedAt } = req.body;
-  const userId = (req as any).user.id;
-  const article = await Article.create({
-    title,
-    body,
-    category,
-    image,
-    readTime,
-    tags,
-    publishedAt,
-    userId,
-  });
-  await User.findByIdAndUpdate(userId, { $inc: { totalArticles: 1 } });
-  res.status(HttpStatus.CREATED).json({ article, message: StatusMessages.SUCCESS });
+export const createArticle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { title, body, category, image, tags } = req.body;
+    const userId = req.user?.id;
+
+    if (!title || !body || !category) {
+      throw new BadRequestError("Title, body, and category are required");
+    }
+
+    const wordsPerMinute = 200;
+    const wordCount = body.trim().split(/\s+/).length;
+    const readTime = Math.ceil(wordCount / wordsPerMinute);
+
+    const article = await Article.create({
+      title,
+      body,
+      category,
+      image,
+      tags,
+      readTime,
+      publishedAt: new Date(),
+      author: userId,
+    });
+
+    await User.findByIdAndUpdate(userId, { $inc: { totalArticles: 1 } });
+
+    res.status(HttpStatus.CREATED).json({
+      article: toArticleDto(article),
+      message: StatusMessages.SUCCESS,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getArticles = async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-  const user = await User.findById(userId).select("blockedArticles preferences");
+
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 6;
+  const skip = (page - 1) * limit;
+
+  const user = await User.findById(userId).select(
+    "blockedArticles preferences"
+  );
   if (!user) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  const articles = await Article.find({ isBlocked: false, category: { $in: user.preferences } })
-    .where("_id").nin(user.blockedArticles);
-  res.json({ articles, message: StatusMessages.SUCCESS });
+
+  const filter = {
+    isBlocked: false,
+    category: { $in: user.preferences },
+    _id: { $nin: user.blockedArticles },
+  };
+
+  const [articles, total] = await Promise.all([
+    Article.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Article.countDocuments(filter),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    articles: articles.map(toArticleDto),
+    totalPages,
+    currentPage: page,
+    totalArticles: total,
+    message: StatusMessages.SUCCESS,
+  });
 };
 
 export const getUserArticles = async (req: Request, res: Response) => {
-  const userId = (req as any).user.id;
-  const articles = await Article.find({ userId }).select("-body");
-  res.json({ articles, message: StatusMessages.SUCCESS });
+  const userId = req.user?.id;
+
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 6;
+  const skip = (page - 1) * limit;
+
+  const [articles, total] = await Promise.all([
+    Article.find({ author: userId })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
+    Article.countDocuments({ userId }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    articles: articles.map(toArticleDto),
+    totalPages,
+    currentPage: page,
+    totalArticles: total,
+    message: StatusMessages.SUCCESS,
+  });
 };
 
 export const getArticleById = async (req: Request, res: Response) => {
@@ -46,10 +119,12 @@ export const getArticleById = async (req: Request, res: Response) => {
 
 export const updateArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { title, body, category, image, readTime, tags, publishedAt } = req.body;
+  const { title, body, category, image, readTime, tags, publishedAt } =
+    req.body;
   const article = await Article.findById(id);
   if (!article) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  if (article.author !== (req as any).user.id) throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
+  if (article.author !== (req as any).user.id)
+    throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
   article.title = title || article.title;
   article.body = body || article.body;
   article.category = category || article.category;
@@ -65,7 +140,8 @@ export const deleteArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
   const article = await Article.findById(id);
   if (!article) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  if (article.author !== (req as any).user.id) throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
+  if (article.author !== (req as any).user.id)
+    throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
   await Article.findByIdAndDelete(id);
   await User.findByIdAndUpdate(article.author, { $inc: { totalArticles: -1 } });
   res.json({ message: StatusMessages.SUCCESS });
@@ -73,22 +149,62 @@ export const deleteArticle = async (req: Request, res: Response) => {
 
 export const likeArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const userId = req.user?.id;
+
   const article = await Article.findById(id);
   if (!article) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  article.likes += 1;
-  await article.save();
-  await User.findByIdAndUpdate(article.author, { $inc: { totalLikes: 1, totalViews: 1 } });
-  res.json({ article, message: StatusMessages.SUCCESS });
+
+  const existing = await ArticleReaction.findOne({ userId, articleId: id });
+
+  if (existing?.status === ReactionStatus.Like) {
+    res.status(400).json({ message: "Already liked" });
+    return;
+  }
+
+  if (existing?.status === ReactionStatus.Dislike) {
+    existing.status = ReactionStatus.Like;
+    await existing.save();
+    await Article.findByIdAndUpdate(id, {
+      $inc: { likes: 1, dislikes: -1 },
+    });
+  } else {
+    await ArticleReaction.create({
+      userId,
+      articleId: id,
+      status: ReactionStatus.Like,
+    });
+    await Article.findByIdAndUpdate(id, { $inc: { likes: 1 } });
+  }
 };
 
 export const dislikeArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const userId = req.user?.id;
+
   const article = await Article.findById(id);
   if (!article) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  article.dislikes += 1;
-  await article.save();
-  await User.findByIdAndUpdate(article.author, { $inc: { totalViews: 1 } });
-  res.json({ article, message: StatusMessages.SUCCESS });
+
+  const existing = await ArticleReaction.findOne({ userId, articleId: id });
+
+  if (existing?.status === ReactionStatus.Dislike) {
+    res.status(HttpStatus.BAD_REQUEST).json({ message: "Already disliked" });
+    return;
+  }
+
+  if (existing?.status === ReactionStatus.Like) {
+    existing.status = ReactionStatus.Dislike;
+    await existing.save();
+    await Article.findByIdAndUpdate(id, {
+      $inc: { dislikes: 1, likes: -1 },
+    });
+  } else {
+    await ArticleReaction.create({
+      userId,
+      articleId: id,
+      status: ReactionStatus.Dislike,
+    });
+    await Article.findByIdAndUpdate(id, { $inc: { dislikes: 1 } });
+  }
 };
 
 export const blockArticle = async (req: Request, res: Response) => {
