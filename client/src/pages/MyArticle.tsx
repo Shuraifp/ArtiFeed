@@ -25,7 +25,6 @@ const MyArticles = () => {
     const getArticles = async () => {
       try {
         const data = await getUserArticles(page, limit);
-        console.log(data)
         setArticles(data.articles);
         setTotalPages(data.totalPages);
       } catch (error) {
@@ -106,6 +105,7 @@ const MyArticles = () => {
                   {article.category}
                 </span>
               </div>
+              
               <div className="p-6">
                 <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2">
                   {article.title}

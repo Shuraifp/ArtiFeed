@@ -37,7 +37,16 @@ const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCar
           <XCircle className="w-5 h-5 text-white" />
         </button>
       </div>
-
+<div className="flex flex-wrap justify-end gap-2 mt-3 mx-3">
+            {article.tags?.map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer" onClick={() => onView(article.id)}>
           {article.title}

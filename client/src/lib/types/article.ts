@@ -10,6 +10,7 @@ export interface Article {
   publishedAt: string;
   likes: number;
   dislikes: number;
+  author: string;
 }
 
 export type PageKey = "dashboard" | "create" | "articles" | "settings" | "profile";

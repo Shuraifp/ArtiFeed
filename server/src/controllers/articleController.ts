@@ -76,7 +76,7 @@ export const getArticles = async (req: Request, res: Response) => {
   const totalPages = Math.ceil(total / limit);
 
   res.json({
-    articles: articles.map(toArticleDto),
+    articles: await Promise.all(articles.map(toArticleDto)),
     totalPages,
     currentPage: page,
     totalArticles: total,
@@ -156,6 +156,8 @@ export const likeArticle = async (req: Request, res: Response) => {
 
   const existing = await ArticleReaction.findOne({ userId, articleId: id });
 
+  let updatedArticle;
+
   if (existing?.status === ReactionStatus.Like) {
     res.status(400).json({ message: "Already liked" });
     return;
@@ -164,8 +166,15 @@ export const likeArticle = async (req: Request, res: Response) => {
   if (existing?.status === ReactionStatus.Dislike) {
     existing.status = ReactionStatus.Like;
     await existing.save();
-    await Article.findByIdAndUpdate(id, {
-      $inc: { likes: 1, dislikes: -1 },
+    updatedArticle = await Article.findByIdAndUpdate(
+      id,
+      {
+        $inc: { likes: 1, dislikes: -1 },
+      },
+      { new: true }
+    );
+    await User.findByIdAndUpdate(article.author, {
+      $inc: { totalLikes: 1 },
     });
   } else {
     await ArticleReaction.create({
@@ -173,8 +182,19 @@ export const likeArticle = async (req: Request, res: Response) => {
       articleId: id,
       status: ReactionStatus.Like,
     });
-    await Article.findByIdAndUpdate(id, { $inc: { likes: 1 } });
+    updatedArticle = await Article.findByIdAndUpdate(
+      id,
+      { $inc: { likes: 1, views: 1 } },
+      { new: true }
+    );
+    await User.findByIdAndUpdate(article.author, {
+      $inc: { totalLikes: 1, totalViews: 1 },
+    });
   }
+  res.json({
+    article: toArticleDto(updatedArticle!),
+    message: "Article liked successfully",
+  });
 };
 
 export const dislikeArticle = async (req: Request, res: Response) => {
@@ -186,6 +206,8 @@ export const dislikeArticle = async (req: Request, res: Response) => {
 
   const existing = await ArticleReaction.findOne({ userId, articleId: id });
 
+  let updatedArticle;
+
   if (existing?.status === ReactionStatus.Dislike) {
     res.status(HttpStatus.BAD_REQUEST).json({ message: "Already disliked" });
     return;
@@ -194,8 +216,13 @@ export const dislikeArticle = async (req: Request, res: Response) => {
   if (existing?.status === ReactionStatus.Like) {
     existing.status = ReactionStatus.Dislike;
     await existing.save();
-    await Article.findByIdAndUpdate(id, {
-      $inc: { dislikes: 1, likes: -1 },
+    updatedArticle = await Article.findByIdAndUpdate(
+      id,
+      { $inc: { dislikes: 1, likes: -1 } },
+      { new: true }
+    );
+    await User.findByIdAndUpdate(article.author, {
+      $inc: { totalLikes: -1 },
     });
   } else {
     await ArticleReaction.create({
@@ -203,8 +230,19 @@ export const dislikeArticle = async (req: Request, res: Response) => {
       articleId: id,
       status: ReactionStatus.Dislike,
     });
-    await Article.findByIdAndUpdate(id, { $inc: { dislikes: 1 } });
+    updatedArticle = await Article.findByIdAndUpdate(
+      id,
+      { $inc: { dislikes: 1, views: 1 } },
+      { new: true }
+    );
+    await User.findByIdAndUpdate(article.author, {
+      $inc: { totalLikes: -1, totalViews: 1 },
+    });
   }
+  res.json({
+    article: toArticleDto(updatedArticle!),
+    message: "Article liked successfully",
+  });
 };
 
 export const blockArticle = async (req: Request, res: Response) => {

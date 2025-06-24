@@ -10,45 +10,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getUserById } from "@/lib/api/user";
 import { handleApiError } from "@/lib/handleApiError";
-
-const mockUserArticles: Article[] = [
-  {
-    id: "1",
-    title: "The Future of Space Exploration",
-    body: "Discover the latest advancements in space technology...",
-    category: "Space",
-    views: 1200,
-    readTime: 5,
-    publishedAt: "2025-06-18",
-    likes: 150,
-    dislikes: 10,
-    image: "/images/space.jpg",
-  },
-  {
-    id: "2",
-    title: "AI in Sports Analytics",
-    body: "How AI is transforming sports performance analysis...",
-    category: "Sports",
-    views: 800,
-    readTime: 4,
-    publishedAt: "2025-06-17",
-    likes: 90,
-    dislikes: 5,
-    image: "/images/sports.jpg",
-  },
-  {
-    id: "3",
-    title: "Quantum Computing Breakthroughs",
-    body: "The latest innovations in quantum computing...",
-    category: "Technology",
-    views: 500,
-    readTime: 6,
-    publishedAt: "2025-06-15",
-    likes: 50,
-    dislikes: 3,
-    image: "/images/tech.jpg",
-  },
-];
+import { getUserArticles } from "@/lib/api/article";
 
 const Profile = () => {
   const router = useRouter();
@@ -75,7 +37,14 @@ const Profile = () => {
         handleApiError({ error, router, user });
       }
     })();
-    setArticles(mockUserArticles);
+    (async () => {
+      try {
+        const data = await getUserArticles(1, 3);
+        setArticles(data.articles);
+      } catch (error) {
+        handleApiError({ error, router, user });
+      }
+    })();
   }, [router, user]);
 
   if (!profile) return null;

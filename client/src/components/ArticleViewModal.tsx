@@ -4,7 +4,6 @@ import { Article } from "@/lib/types/article";
 import { motion } from "framer-motion";
 import { X, ThumbsUp, ThumbsDown } from "lucide-react";
 
-
 interface ArticleViewModalProps {
   article: Article;
   onClose: () => void;
@@ -18,8 +17,8 @@ const ArticleViewModal = ({
   onClose,
   onLike,
   onDislike,
-  // onShare,
-}: ArticleViewModalProps) => {
+}: // onShare,
+ArticleViewModalProps) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -61,13 +60,27 @@ const ArticleViewModal = ({
             {article.title}
           </h2>
           <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-            <span>{article.publishedAt}</span>
-            <span>{article.readTime} min read</span>
+            <span>By {article.author ?? "Unknown"}</span>
+            <div className="flex items-center space-x-4">
+              <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+              <span>{article.readTime} min read</span>
+            </div>
           </div>
 
           {/* Full Body Content */}
           <div className="text-gray-700 space-y-4 leading-relaxed whitespace-pre-line mb-6">
             {article.body}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-2">
+            {article.tags?.map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+              >
+                #{tag}
+              </span>
+            ))}
           </div>
 
           {/* Interaction Buttons */}

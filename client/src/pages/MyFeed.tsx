@@ -12,7 +12,13 @@ import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from "@/lib/handleApiError";
 import { getPreferences } from "@/lib/api/preferences";
 
-import { getArticles,likeArticle, dislikeArticle, blockArticle } from "@/lib/api/article";
+import {
+  getArticles,
+  likeArticle,
+  dislikeArticle,
+  blockArticle,
+} from "@/lib/api/article";
+import ConfirmBlockModal from "@/components/ConfirmBlockModal";
 
 export default function MyFeed() {
   const router = useRouter();
@@ -24,10 +30,10 @@ export default function MyFeed() {
   //   useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [categoryList, setCategoryList] = useState<string[]>([]);
+  const [blockTargetId, setBlockTargetId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 6;
-  console.log(articles)
 
   useEffect(() => {
     (async () => {
@@ -41,7 +47,6 @@ export default function MyFeed() {
     (async () => {
       try {
         const data = await getArticles(page, limit);
-        console.log(data)
         setArticles(data.articles);
         setTotalPages(data.totalPages);
       } catch (error) {
@@ -51,31 +56,22 @@ export default function MyFeed() {
   }, [router, user, page]);
 
   const handleLike = async (id: string) => {
-  try {
-    await likeArticle(id);
-    setArticles((prev) =>
-      prev.map((article) =>
-        article.id === id ? { ...article, likes: article.likes + 1 } : article
-      )
-    );
-  } catch (error) {
-    handleApiError({ error, router, user });
-  }
-};
+    try {
+      const { article } = await likeArticle(id);
+      setArticles((prev) => prev.map((art) => (art.id === id ? article : art)));
+    } catch (error) {
+      handleApiError({ error, router, user });
+    }
+  };
 
   const handleDislike = async (id: string) => {
-  try {
-    await dislikeArticle(id);
-    setArticles((prev) =>
-      prev.map((article) =>
-        article.id === id ? { ...article, dislikes: article.dislikes + 1 } : article
-      )
-    );
-  } catch (error) {
-    handleApiError({ error, router, user });
-  }
-};
-
+    try {
+      const { article } = await dislikeArticle(id);
+      setArticles((prev) => prev.map((art) => (art.id === id ? article : art)));
+    } catch (error) {
+      handleApiError({ error, router, user });
+    }
+  };
 
   const handleView = (id: string) => {
     const article = articles.find((a) => a.id === id);
@@ -83,14 +79,18 @@ export default function MyFeed() {
   };
 
   const handleBlock = async (id: string) => {
-  try {
-    await blockArticle(id);
-    setArticles((prev) => prev.filter((article) => article.id !== id));
-  } catch (error) {
-    handleApiError({ error, router, user });
-  }
-};
-
+    setBlockTargetId(id);
+  };
+  const confirmBlock = async () => {
+    if (!blockTargetId) return;
+    try {
+      await blockArticle(blockTargetId);
+      setArticles((prev) => prev.filter((a) => a.id !== blockTargetId));
+      setBlockTargetId(null);
+    } catch (error) {
+      handleApiError({ error, router, user });
+    }
+  };
 
   const handleFilterChange = (value: string[]) => {
     setFilters(value);
@@ -220,6 +220,14 @@ export default function MyFeed() {
           </button>
         </div>
       </div>
+      <AnimatePresence>
+        {blockTargetId && (
+          <ConfirmBlockModal
+            onCancel={() => setBlockTargetId(null)}
+            onConfirm={confirmBlock}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
