@@ -84,6 +84,29 @@ export const getArticles = async (req: Request, res: Response) => {
   });
 };
 
+export const getArticlesForAdmin = async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 6;
+  const skip = (page - 1) * limit;
+
+  const [articles, total] = await Promise.all([
+    Article.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Article.countDocuments(),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    articles: await Promise.all(articles.map(toArticleDto)),
+    totalPages,
+    currentPage: page,
+    totalArticles: total,
+    message: StatusMessages.SUCCESS,
+  });
+};
+
 export const getUserArticles = async (req: Request, res: Response) => {
   const userId = req.user?.id;
 
@@ -102,7 +125,7 @@ export const getUserArticles = async (req: Request, res: Response) => {
   const totalPages = Math.ceil(total / limit);
 
   res.json({
-    articles: articles.map(toArticleDto),
+    articles: await Promise.all(articles.map(toArticleDto)),
     totalPages,
     currentPage: page,
     totalArticles: total,
@@ -119,19 +142,22 @@ export const getArticleById = async (req: Request, res: Response) => {
 
 export const updateArticle = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { title, body, category, image, readTime, tags, publishedAt } =
-    req.body;
+  const { title, body, category, image, tags } = req.body;
   const article = await Article.findById(id);
   if (!article) throw new NotFoundError(StatusMessages.NOT_FOUND);
   if (article.author !== (req as any).user.id)
     throw new ForbiddenError(StatusMessages.PERMISSION_DENIED);
+
+  const wordsPerMinute = 200;
+  const wordCount = body.trim().split(/\s+/).length;
+  const readTime = Math.ceil(wordCount / wordsPerMinute);
+
   article.title = title || article.title;
   article.body = body || article.body;
   article.category = category || article.category;
   article.image = image || article.image;
-  article.readTime = readTime || article.readTime;
+  article.readTime = readTime;
   article.tags = tags || article.tags;
-  article.publishedAt = publishedAt || article.publishedAt;
   await article.save();
   res.json({ article, message: StatusMessages.SUCCESS });
 };
@@ -192,7 +218,7 @@ export const likeArticle = async (req: Request, res: Response) => {
     });
   }
   res.json({
-    article: toArticleDto(updatedArticle!),
+    article: await toArticleDto(updatedArticle!),
     message: "Article liked successfully",
   });
 };
@@ -240,7 +266,7 @@ export const dislikeArticle = async (req: Request, res: Response) => {
     });
   }
   res.json({
-    article: toArticleDto(updatedArticle!),
+    article: await toArticleDto(updatedArticle!),
     message: "Article liked successfully",
   });
 };

@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
-import { Users, Trash2, Edit } from "lucide-react";
+import { Users, Trash2 } from "lucide-react";
 import { UserProfile } from "@/lib/types/user";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { blockUser, getAllUsers } from "@/lib/api/user";
+import { handleApiError } from "@/lib/handleApiError";
 
 const ManageUsers = () => {
   const { admin, loading } = useAuth();
@@ -17,16 +19,39 @@ const ManageUsers = () => {
   >("users");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
 
   useEffect(() => {
-    // Simulate API call
-    setUsers([]);
-  }, []);
+    (async () => {
+      try {
+        const { users, totalPages, total } = await getAllUsers(page, 7);
+        setUsers(users);
+        setTotalUsers(total);
+        setTotalPages(totalPages);
+      } catch (error) {
+        handleApiError({ error, router, admin });
+      }
+    })();
+  }, [page, admin, router]);
 
   const handleDelete = (email: string) => {
     setUsers(users.filter((user) => user.email !== email));
     // Call API to delete user
   };
+
+  const handleToggleBlock = async (id: string, isCurrentlyBlocked: boolean) => {
+  try {
+    await blockUser(id)
+    const updatedUsers = users.map((user) =>
+      user.id === id ? { ...user, isBlocked: !isCurrentlyBlocked } : user
+    );
+    setUsers(updatedUsers);
+  } catch (error) {
+    handleApiError({ error, router, admin });
+  }
+};
 
   useEffect(() => {
     if (!admin && !loading) {
@@ -77,6 +102,9 @@ const ManageUsers = () => {
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Manage Users
                 </h2>
+                <span className="ml-2 text-sm text-gray-600 font-medium">
+                  ({totalUsers} total)
+                </span>
               </div>
               <div className="space-y-4">
                 {users.map((user) => (
@@ -92,6 +120,7 @@ const ManageUsers = () => {
                         {user.firstName} {user.lastName}
                       </p>
                       <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-sm text-gray-500">{user.phone}</p>
                       <p className="text-sm text-gray-500">
                         Preferences: {user.preferences.join(", ") || "None"}
                       </p>
@@ -103,10 +132,17 @@ const ManageUsers = () => {
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        className="p-2 bg-blue-600 text-white rounded-xl"
-                        aria-label={`Edit user ${user.email}`}
+                        onClick={() =>
+                          handleToggleBlock(user.id, user.isBlocked)
+                        }
+                        className={`p-2 rounded-xl text-white ${
+                          user.isBlocked ? "bg-green-600" : "bg-yellow-600"
+                        }`}
+                        aria-label={`${
+                          user.isBlocked ? "Unblock" : "Block"
+                        } user ${user.email}`}
                       >
-                        <Edit className="w-5 h-5" />
+                        {user.isBlocked ? "Unblock" : "Block"}
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -122,6 +158,27 @@ const ManageUsers = () => {
                 ))}
               </div>
             </motion.div>
+            <div className="flex justify-between items-center mt-6">
+              <button
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-gray-700">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </main>
       </div>

@@ -7,6 +7,7 @@ import { StatusMessages } from "../utils/HTTPStatusMessages";
 import bcrypt from "bcrypt";
 import ArticleReaction, { ReactionStatus } from "../models/articleReaction";
 import Article from "../models/article";
+import { Roles } from "../types/type";
 
 export const createUser = async (req: Request, res: Response) => {
   const { email, password, phone, firstName, lastName, dob, preferences } =
@@ -32,8 +33,23 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 export const getUsers = async (req: Request, res: Response) => {
-  const users = await User.find().select("-password");
-  res.json({ users: users.map(toUserDto), message: StatusMessages.SUCCESS });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  const totalUsers = await User.countDocuments({ role: Roles.User });
+  const users = await User.find({ role: Roles.User })
+    .select("-password")
+    .skip(skip)
+    .limit(limit);
+
+  res.json({
+    users: users.map(toUserDto),
+    total: totalUsers,
+    page,
+    totalPages: Math.ceil(totalUsers / limit),
+    message: StatusMessages.SUCCESS,
+  });
 };
 
 export const getUserById = async (req: Request, res: Response) => {
@@ -74,11 +90,15 @@ export const deleteUser = async (req: Request, res: Response) => {
   res.json({ message: StatusMessages.SUCCESS });
 };
 
-export const blockUser = async (req: Request, res: Response) => {
+export const toggleBlockUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = await User.findById(id);
   if (!user) throw new NotFoundError(StatusMessages.NOT_FOUND);
-  user.isBlocked = true;
+  if (user.isBlocked) {
+    user.isBlocked = false;
+  } else {
+    user.isBlocked = true;
+  }
   await user.save();
   res.json({ user: toUserDto(user), message: "User blocked" });
 };
@@ -107,6 +127,60 @@ export const getStats = async (
         activeUsers,
         totalArticles,
         satisfactionRate: `${satisfactionRate}%`,
+      },
+      message: StatusMessages.SUCCESS,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const getAdminStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const totalUsers = await User.countDocuments({ role: Roles.User });
+    const totalArticles = await Article.countDocuments();
+    const totalViewsAggregation = await Article.aggregate([
+      { $group: { _id: null, total: { $sum: "$views" } } },
+    ]);
+    const totalViews = totalViewsAggregation[0]?.total || 0;
+    const reactionsAggregation = await ArticleReaction.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    let averageLikes = 0;
+    let averageDislikes = 0;
+
+    reactionsAggregation.forEach((item) => {
+      if (item._id === "like") averageLikes = item.count;
+      if (item._id === "dislike") averageDislikes = item.count;
+    });
+    
+    const categoryAggregation = await Article.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]);
+
+    const categoryDistribution: Record<string, number> = {};
+    categoryAggregation.forEach((entry) => {
+      categoryDistribution[entry._id] = entry.count;
+    });
+
+    res.status(HttpStatus.OK).json({
+      stats: {
+        totalUsers,
+        totalArticles,
+        totalViews,
+        averageLikes,
+        averageDislikes,
+        categoryDistribution,
       },
       message: StatusMessages.SUCCESS,
     });

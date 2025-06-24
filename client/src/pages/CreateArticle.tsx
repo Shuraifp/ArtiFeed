@@ -95,7 +95,7 @@ const CreateArticle = () => {
     setLoading(true);
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.body);
+    formDataToSend.append("body", formData.body);
     formDataToSend.append("category", formData.category);
     formDataToSend.append("tags", JSON.stringify(formData.tags));
     if (formData.image) formDataToSend.append("image", formData.image);

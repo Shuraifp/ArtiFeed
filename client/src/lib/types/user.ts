@@ -12,6 +12,7 @@ export interface AuthUser {
 }
 
 export interface UserProfile {
+  id:string;
   firstName: string;
   lastName: string;
   email: string;
@@ -21,6 +22,7 @@ export interface UserProfile {
   totalArticles: number;
   totalViews: number;
   totalLikes: number;
+  isBlocked:boolean;
 }
 
 export interface UserFormData {

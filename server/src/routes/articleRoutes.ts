@@ -10,6 +10,7 @@ import {
   dislikeArticle,
   blockArticle,
   adminBlockArticle,
+  getArticlesForAdmin,
 } from "../controllers/articleController";
 import { authenticateJWT } from "../middlewares/authMiddleware";
 
@@ -17,9 +18,10 @@ const router = Router();
 
 router.post("/", authenticateJWT("user"), createArticle);
 router.get("/", authenticateJWT("user"), getArticles);
+router.get("/admin", authenticateJWT("admin"), getArticlesForAdmin);
 router.get("/user", authenticateJWT("user"), getUserArticles);
 router.get("/articles/:id", authenticateJWT("user"), getArticleById);
-router.put("/articles/:id", authenticateJWT("user"), updateArticle);
+router.put("/:id", authenticateJWT("user"), updateArticle);
 router.delete("/articles/:id", authenticateJWT("user"), deleteArticle);
 router.post("/:id/like", authenticateJWT("user"), likeArticle);
 router.post("/:id/dislike", authenticateJWT("user"), dislikeArticle);

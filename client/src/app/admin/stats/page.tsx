@@ -8,24 +8,8 @@ import { BarChart2 } from "lucide-react";
 import { AdminStats } from "@/lib/types/admin";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-
-const mockStats: AdminStats = {
-  totalUsers: 150,
-  totalArticles: 500,
-  totalViews: 100000,
-  averageLikes: 75,
-  averageDislikes: 5,
-  categoryDistribution: {
-    Sports: 100,
-    Politics: 80,
-    Space: 70,
-    Technology: 120,
-    Health: 50,
-    Business: 40,
-    Entertainment: 30,
-    Science: 10,
-  },
-};
+import { fetchAdminStats } from "@/lib/api/user";
+import { handleApiError } from "@/lib/handleApiError";
 
 const WebsiteStats = () => {
   const { admin, loading } = useAuth();
@@ -37,9 +21,15 @@ const WebsiteStats = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   useEffect(() => {
-    // Simulate API call
-    setStats(mockStats);
-  }, []);
+    (async () => {
+      try {
+        const data = await fetchAdminStats();
+        setStats(data.stats);
+      } catch (error) {
+        handleApiError({ error, router, admin });
+      }
+    })();
+  }, [router, admin]);
 
   useEffect(() => {
     if (!admin && !loading) {

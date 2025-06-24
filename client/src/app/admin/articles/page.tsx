@@ -4,45 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
-import ArticleCard from "@/components/ArticleCard";
-import ArticleViewModal from "@/components/ArticleViewModal";
-import { FileText, Trash2, Flag } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { Article } from "@/lib/types/article";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-
-interface AdminArticle extends Article {
-  status: "published" | "flagged" | "draft";
-}
-
-const mockArticles: AdminArticle[] = [
-  {
-    id: "1",
-    title: "The Future of Space Exploration",
-    body: "Discover the latest advancements in space technology...",
-    category: "Space",
-    image: "/images/space.jpg",
-    views: 1200,
-    readTime: 10,
-    publishedAt: "2025-06-18",
-    likes: 150,
-    dislikes: 10,
-    status: "published",
-  },
-  {
-    id: "2",
-    title: "AI in Sports Analytics",
-    body: "How AI is transforming sports performance analysis...",
-    category: "Sports",
-    image: "/images/sports.jpg",
-    views: 800,
-    readTime: 8,
-    publishedAt: "2025-06-17",
-    likes: 90,
-    dislikes: 5,
-    status: "flagged",
-  },
-];
+import { getArticlesForadmin } from "@/lib/api/article";
+import { handleApiError } from "@/lib/handleApiError";
 
 const ManageArticles = () => {
   const router = useRouter();
@@ -51,39 +18,33 @@ const ManageArticles = () => {
     "dashboard" | "users" | "articles" | "preferences" | "stats"
   >("articles");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [articles, setArticles] = useState<AdminArticle[]>([]);
-  const [selectedArticle, setSelectedArticle] = useState<AdminArticle | null>(
-    null
-  );
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 6;
 
   useEffect(() => {
-    // Simulate API call
-    setArticles(mockArticles);
-  }, []);
+    (async () => {
+      try {
+        const data = await getArticlesForadmin(page, limit);
+        console.log(data);
+        setArticles(data.articles);
+        setTotalPages(data.totalPages);
+      } catch (error) {
+        handleApiError({ error, router, admin });
+      }
+    })();
+  }, [router, admin, page]);
 
   const handleDelete = (id: string) => {
     setArticles(articles.filter((article) => article.id !== id));
     // Call API to delete article
   };
 
-  const handleFlag = (id: string) => {
-    setArticles(
-      articles.map((article) =>
-        article.id === id
-          ? {
-              ...article,
-              status: article.status === "flagged" ? "published" : "flagged",
-            }
-          : article
-      )
-    );
-    // Call API to update article status
-  };
-
-  const handleView = (id: string) => {
-    const article = articles.find((a) => a.id === id);
-    if (article) setSelectedArticle(article);
-  };
+  // const handleView = (id: string) => {
+  //   const article = articles.find((a) => a.id === id);
+  //   if (article) setSelectedArticle(article);
+  // };
 
   useEffect(() => {
     if (!admin && !loading) {
@@ -144,74 +105,61 @@ const ManageArticles = () => {
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
                 <AnimatePresence>
-                  {articles.map((article, index) => (
-                    <motion.div
+                  {articles.map((article) => (
+                    <div
                       key={article.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ delay: index * 0.1, duration: 0.4 }}
-                      layout
+                      className="p-4 bg-gray-200 shadow rounded-xl flex flex-col justify-between"
                     >
-                      <div className="relative">
-                        <ArticleCard
-                          article={article}
-                          onLike={() => {}}
-                          onDislike={() => {}}
-                          // onShare={() => {}}
-                          onView={handleView}
-                          onBlock={handleDelete}
-                        />
-                        <div className="absolute top-2 right-2 flex space-x-2">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleFlag(article.id)}
-                            className={`p-2 ${
-                              article.status === "flagged"
-                                ? "bg-yellow-600"
-                                : "bg-gray-600"
-                            } text-white rounded-xl`}
-                            aria-label={
-                              article.status === "flagged"
-                                ? `Unflag article ${article.title}`
-                                : `Flag article ${article.title}`
-                            }
-                          >
-                            <Flag className="w-5 h-5" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDelete(article.id)}
-                            className="p-2 bg-red-600 text-white rounded-xl"
-                            aria-label={`Delete article ${article.title}`}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </motion.button>
-                        </div>
-                        {article.status === "flagged" && (
-                          <span className="absolute top-2 left-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                            Flagged
-                          </span>
-                        )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {article.title}
+                        </p>
+                        <p className="font-medium mt-1 text-gray-700">
+                         By {article.author}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {article.category} •{" "}
+                          {new Date(article.publishedAt).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {article.views} views • {article.likes} 👍 •{" "}
+                          {article.dislikes} 👎
+                        </p>
                       </div>
-                    </motion.div>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleDelete(article.id)}
+                        className="self-end mt-4 p-2 bg-red-600 text-white rounded-xl"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </motion.button>
+                    </div>
                   ))}
                 </AnimatePresence>
               </motion.div>
-              <AnimatePresence>
-                {selectedArticle && (
-                  <ArticleViewModal
-                    article={selectedArticle}
-                    onClose={() => setSelectedArticle(null)}
-                    onLike={() => {}}
-                    onDislike={() => {}}
-                    // onShare={() => {}}
-                  />
-                )}
-              </AnimatePresence>
             </motion.div>
+            <div className="flex justify-between items-center mt-6">
+              <button
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-gray-700">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </main>
       </div>

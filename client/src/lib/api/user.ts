@@ -2,14 +2,26 @@ import userInstance from "./axios/user";
 import adminInstance from "./axios/admin";
 import { UserFormData } from "../types/user";
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (page: number, limit: number) => {
   try {
-    const res = await adminInstance.get("/user/users");
+    const res = await adminInstance.get("/user", {
+      params: { page, limit },
+    });
     return res.data;
   } catch (error) {
     throw error;
   }
 };
+
+export const fetchAdminStats = async () => {
+  try {
+    const res = await adminInstance.get("/user/admin/stats");
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 export const getUserById = async () => {
   try {

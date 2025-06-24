@@ -27,6 +27,17 @@ export const getArticles = async (page: number, limit: number) => {
   }
 };
 
+export const getArticlesForadmin = async (page: number, limit: number) => {
+  try {
+    const res = await userInstance.get("/article/admin", {
+      params: { page, limit },
+    });
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getUserArticles = async (page: number, limit: number) => {
   try {
     const res = await userInstance.get("/article/user", {
@@ -48,7 +59,6 @@ export const getArticleById = async (id: string) => {
   }
 };
 
-// 5. Update Article
 export const updateArticle = async (
   id: string,
   updatedData: {
@@ -60,7 +70,7 @@ export const updateArticle = async (
   }
 ) => {
   try {
-    const res = await userInstance.put(`/article/articles/${id}`, updatedData);
+    const res = await userInstance.put(`/article/${id}`, updatedData);
     return res.data;
   } catch (error) {
     throw error;
