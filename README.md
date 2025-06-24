@@ -48,6 +48,8 @@
 
 ##  Project Structure
 
+```
+
 ARTIFEED/
 ├── client/                 # Frontend application
 │   ├── src/
@@ -73,6 +75,8 @@ ARTIFEED/
 │   ├── .env
 │   └── package.json
 └── README.md
+
+```
 
 ---
 
