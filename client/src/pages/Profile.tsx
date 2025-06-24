@@ -23,6 +23,7 @@ const Profile = () => {
       try {
         const { user }: { user: UserProfile } = await getUserById();
         setProfile({
+          id: user.id || "",
           firstName: user.firstName || "",
           lastName: user.lastName || "",
           email: user.email,
@@ -32,6 +33,7 @@ const Profile = () => {
           totalViews: user.totalViews || 0,
           totalLikes: user.totalLikes || 0,
           preferences: user.preferences || [],
+          isBlocked: user.isBlocked || false
         });
       } catch (error) {
         handleApiError({ error, router, user });
