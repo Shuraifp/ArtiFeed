@@ -1,10 +1,12 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import User from "../models/user";
 import { toUserDto } from "../mappers/userMapper";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { HttpStatus } from "../utils/HTTPStatusCodes";
 import { StatusMessages } from "../utils/HTTPStatusMessages";
 import bcrypt from "bcrypt";
+import ArticleReaction, { ReactionStatus } from "../models/articleReaction";
+import Article from "../models/article";
 
 export const createUser = async (req: Request, res: Response) => {
   const { email, password, phone, firstName, lastName, dob, preferences } =
@@ -79,4 +81,36 @@ export const blockUser = async (req: Request, res: Response) => {
   user.isBlocked = true;
   await user.save();
   res.json({ user: toUserDto(user), message: "User blocked" });
+};
+
+export const getStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const activeUsers = await User.countDocuments({ isBlocked: false });
+
+    const totalArticles = await Article.countDocuments({ isBlocked: false });
+
+    const totalReactions = await ArticleReaction.countDocuments();
+    const likedReactions = await ArticleReaction.countDocuments({
+      status: ReactionStatus.Like,
+    });
+    const satisfactionRate =
+      totalReactions > 0
+        ? Math.round((likedReactions / totalReactions) * 100)
+        : 0;
+
+    res.status(HttpStatus.OK).json({
+      stats: {
+        activeUsers,
+        totalArticles,
+        satisfactionRate: `${satisfactionRate}%`,
+      },
+      message: StatusMessages.SUCCESS,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

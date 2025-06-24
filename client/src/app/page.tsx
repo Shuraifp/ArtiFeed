@@ -7,12 +7,14 @@ import AnimatedNavbar from "@/components/Navbar";
 import FeaturesSection from "@/components/Features";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useStats } from "@/hooks/useStats";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const HeroSection = () => {
   const { user } = useAuth();
   const router = useRouter();
+  const { stats, loading, error } = useStats();
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 150]);
 
@@ -112,22 +114,33 @@ const HeroSection = () => {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="grid grid-cols-3 gap-8 max-w-2xl mx-auto"
         >
-          {[
-            { number: "50K+", label: "Active Readers" },
-            { number: "10K+", label: "Articles Shared" },
-            { number: "95%", label: "Satisfaction Rate" },
-          ].map((stat) => (
-            <motion.div
-              key={stat.label}
-              whileHover={{ scale: 1.05 }}
-              className="text-center"
-            >
-              <div className="text-2xl md:text-3xl font-bold text-blue-400 mb-1">
-                {stat.number}
-              </div>
-              <div className="text-sm text-gray-400">{stat.label}</div>
-            </motion.div>
-          ))}
+          {loading ? (
+            <div>Loading stats...</div>
+          ) : error ? (
+            <div>Error loading stats</div>
+          ) : (
+            [
+              { number: stats?.activeUsers || "0", label: "Active Readers" },
+              { number: stats?.totalArticles || "0", label: "Articles Shared" },
+              {
+                number: stats?.satisfactionRate || "0%",
+                label: "Satisfaction Rate",
+              },
+            ].map((stat) => (
+              <motion.div
+                key={stat.label}
+                whileHover={{ scale: 1.05 }}
+                className="text-center"
+              >
+                <div className="text-2xl md:text-3xl font-bold text-blue-400 mb-1">
+                  {typeof stat.number === "number" && stat.number > 1000
+                    ? `${Math.round(stat.number / 1000)}K+`
+                    : stat.number}
+                </div>
+                <div className="text-sm text-gray-400">{stat.label}</div>
+              </motion.div>
+            ))
+          )}
         </motion.div>
 
         {/* Scroll Indicator */}
@@ -187,7 +200,7 @@ const CTASection = () => {
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-white text-blue-600 rounded-full font-bold text-lg hover:shadow-2xl transition-all duration-300 flex items-center space-x-2"
             >
-              <Link href='/register'>Create Your Account</Link>
+              <Link href="/register">Create Your Account</Link>
               <ArrowRight className="w-5 h-5" />
             </motion.button>
 
