@@ -12,11 +12,11 @@ export interface JWTPayload {
   role: Roles;
 }
 
-declare module "express" {
-  export interface Request {
-    user?: JWTPayload;
-  }
-}
+// declare module "express" {
+//   export interface Request {
+//     user?: JWTPayload;
+//   }
+// }
 
 export const authenticateJWT = (requiredRole: "user" | "admin") => {
   return (req: Request, res: Response, next: NextFunction): void => {

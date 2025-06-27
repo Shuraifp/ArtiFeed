@@ -9,7 +9,8 @@ import { HttpStatus } from "../utils/HTTPStatusCodes";
 import { ACCESS_EXPIRY, REFRESH_EXPIRY } from "../types/jwt";
 import { StatusMessages } from "../utils/HTTPStatusMessages";
 import { JWTPayload } from "../middlewares/authMiddleware";
-import { Roles } from "../types/type";
+import { Roles, successResponse } from "../types/type";
+import { toAuthResponseDto } from "../mappers/authResponseMapper";
 
 export const signup = async (req: Request, res: Response) => {
   const { email, password, phone, firstName, lastName, dob, preferences } =
@@ -98,7 +99,7 @@ export const login = async (req: Request, res: Response) => {
     secure: process.env.NODE_ENV === "production",
     maxAge: REFRESH_EXPIRY * 1000,
   });
-  res.json({ user: user._id, message: StatusMessages.SUCCESS });
+  res.json(successResponse(StatusMessages.SUCCESS, toAuthResponseDto(user)));
 };
 
 export const adminLogin = async (req: Request, res: Response) => {
