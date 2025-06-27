@@ -4,7 +4,7 @@ import { UserFormData } from "../types/user";
 
 export const getAllUsers = async (page: number, limit: number) => {
   try {
-    const res = await adminInstance.get("/user", {
+    const res = await adminInstance.get("/user/admin", {
       params: { page, limit },
     });
     return res.data;

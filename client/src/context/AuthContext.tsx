@@ -4,12 +4,17 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+interface authResponse {
+  id: string;
+  name: string;
+}
+
 interface AuthContextType {
-  user: string | null;
-  admin: string | null;
-  login: (user: string) => void;
+  user: authResponse | null;
+  admin: authResponse | null;
+  login: (user: authResponse) => void;
   logout: () => void;
-  loginAdmin: (admin: string) => void;
+  loginAdmin: (admin: authResponse) => void;
   logoutAdmin: () => void;
   loading: boolean;
 }
@@ -25,25 +30,25 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<string | null>(null);
-  const [admin, setAdmin] = useState<string | null>(null);
+  const [user, setUser] = useState<authResponse | null>(null);
+  const [admin, setAdmin] = useState<authResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
+
     const storedUser = localStorage.getItem("artiUser");
     const storedAdmin = localStorage.getItem("artiAdmin");
 
-
-    if (storedUser) setUser(storedUser);
-    if (storedAdmin) setAdmin(storedAdmin);
+    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedAdmin) setAdmin(JSON.parse(storedAdmin));
     setLoading(false);
   }, []);
 
-  const login = (user: string) => {
+  const login = (user: authResponse) => {
     setUser(user);
-    localStorage.setItem("artiUser", user); 
+    localStorage.setItem("artiUser", JSON.stringify(user));
     // toast.success("Logged in successfully");
   };
 
@@ -54,9 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast("Logged out");
   };
 
-  const loginAdmin = (admin: string) => {
+  const loginAdmin = (admin: authResponse) => {
     setAdmin(admin);
-    localStorage.setItem("artiAdmin", admin);
+    localStorage.setItem("artiAdmin", JSON.stringify(admin));
     // toast.success("Admin logged in");
   };
 

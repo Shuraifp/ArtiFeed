@@ -4,6 +4,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, Search, User, ChevronDown } from "lucide-react";
 import { PageKey } from "@/lib/types/article";
+import { useAuth } from "@/context/AuthContext";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -18,6 +19,7 @@ const Header = ({
   currentPage,
   setCurrentPage,
 }: HeaderProps) => {
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState("");
   const pageNames: Record<PageKey, string> = {
     dashboard: "Dashboard",
@@ -109,7 +111,7 @@ const Header = ({
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-gray-900">John Doe</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500">Writer</p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
