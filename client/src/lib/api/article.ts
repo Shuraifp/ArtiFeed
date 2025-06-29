@@ -18,10 +18,21 @@ export const createArticle = async (data: {
 
 export const getArticles = async (page: number, limit: number) => {
   try {
+    const res = await userInstance.get("/article/following", {
+      params: { page, limit },
+    });
+    return res.data.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getExploreArticles = async (page: number, limit: number) => {
+  try {
     const res = await userInstance.get("/article", {
       params: { page, limit },
     });
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -43,7 +54,7 @@ export const getUserArticles = async (page: number, limit: number) => {
     const res = await userInstance.get("/article/user", {
       params: { page, limit },
     });
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -77,10 +88,9 @@ export const updateArticle = async (
   }
 };
 
-// 6. Delete Article
 export const deleteArticle = async (id: string) => {
   try {
-    const res = await userInstance.delete(`/article/articles/${id}`);
+    const res = await userInstance.delete(`/article/${id}`);
     return res.data;
   } catch (error) {
     throw error;
@@ -90,7 +100,7 @@ export const deleteArticle = async (id: string) => {
 export const likeArticle = async (id: string) => {
   try {
     const res = await userInstance.post(`/article/${id}/like`);
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -99,7 +109,7 @@ export const likeArticle = async (id: string) => {
 export const dislikeArticle = async (id: string) => {
   try {
     const res = await userInstance.post(`/article/${id}/dislike`);
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -108,17 +118,16 @@ export const dislikeArticle = async (id: string) => {
 export const blockArticle = async (id: string) => {
   try {
     const res = await userInstance.post(`/article/${id}/block`);
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
 };
 
-// 🔒 10. Admin Block Article
 export const adminBlockArticle = async (id: string) => {
   try {
-    const res = await adminInstance.post(`/article/articles/${id}/admin-block`);
-    return res.data;
+    const res = await adminInstance.post(`/article/${id}/admin-block`);
+    return res.data.data;
   } catch (error) {
     throw error;
   }

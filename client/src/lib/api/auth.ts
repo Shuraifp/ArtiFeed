@@ -12,7 +12,7 @@ export const loginUser = async (identifier: string, password: string) => {
   }
   try {
     const response = await publicInstance.post("/auth/login", Data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw error
   }
@@ -21,7 +21,7 @@ export const loginUser = async (identifier: string, password: string) => {
 export const register = async (userData: FormData) => {
   try {
     const response = await publicInstance.post("/auth/signup", userData);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw error
   }
@@ -30,7 +30,7 @@ export const register = async (userData: FormData) => {
 export const adminLogin = async (email: string, password: string) => {
   try {
     const response = await publicInstance.post("/auth/admin/login", { email, password });
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw error
   }

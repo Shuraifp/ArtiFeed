@@ -2,7 +2,6 @@ import { Article } from "@/lib/types/article";
 import { motion } from "framer-motion";
 import { Eye, Clock, ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 
-
 interface ArticleCardProps {
   article: Article;
   onLike: (id: string) => void;
@@ -10,9 +9,17 @@ interface ArticleCardProps {
   // onShare: (id: string) => void;
   onView: (id: string) => void;
   onBlock: (id: string) => void;
+  isFeedPage?: boolean;
 }
 
-const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCardProps) => {
+const ArticleCard = ({
+  article,
+  onLike,
+  onDislike,
+  onView,
+  onBlock,
+  isFeedPage,
+}: ArticleCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -22,13 +29,17 @@ const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCar
     >
       <div className="relative h-48 bg-gradient-to-br from-blue-400 to-purple-600">
         {article.image && (
-          <img src={article.image} alt={article.title} className="w-full h-full object-cover" />
+          <img
+            src={article.image}
+            alt={article.title}
+            className="w-full h-full object-cover"
+          />
         )}
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute bottom-4 left-4">
           <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
             {article.category}
-          </span> 
+          </span>
         </div>
         <button
           onClick={() => onBlock(article.id)}
@@ -37,18 +48,21 @@ const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCar
           <XCircle className="w-5 h-5 text-white" />
         </button>
       </div>
-<div className="flex flex-wrap justify-end gap-2 mt-3 mx-3">
-            {article.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+      <div className="flex flex-wrap justify-end gap-2 mt-3 mx-3">
+        {article.tags?.map((tag) => (
+          <span
+            key={tag}
+            className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+          >
+            #{tag}
+          </span>
+        ))}
+      </div>
       <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer" onClick={() => onView(article.id)}>
+        <h3
+          className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 cursor-pointer"
+          onClick={() => onView(article.id)}
+        >
           {article.title}
         </h3>
         <p className="text-gray-600 mb-4 line-clamp-2">{article.body}</p>
@@ -67,37 +81,39 @@ const ArticleCard = ({ article, onLike, onDislike, onView, onBlock }: ArticleCar
           <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onLike(article.id)}
-              className="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
-            >
-              <ThumbsUp className="w-5 h-5" />
-              <span>{article.likes}</span>
-            </button>
-            <button
-              onClick={() => onDislike(article.id)}
-              className="flex items-center space-x-1 text-gray-500 hover:text-red-600"
-            >
-              <ThumbsDown className="w-5 h-5" />
-              <span>{article.dislikes}</span>
-            </button>
-            {/* <button
+        {isFeedPage && (
+          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onLike(article.id)}
+                className="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+              >
+                <ThumbsUp className="w-5 h-5" />
+                <span>{article.likes}</span>
+              </button>
+              <button
+                onClick={() => onDislike(article.id)}
+                className="flex items-center space-x-1 text-gray-500 hover:text-red-600"
+              >
+                <ThumbsDown className="w-5 h-5" />
+                <span>{article.dislikes}</span>
+              </button>
+              {/* <button
               onClick={() => onShare(article.id)}
               className="flex items-center space-x-1 text-gray-500 hover:text-purple-600"
             >
               <Share2 className="w-5 h-5" />
               <span>Share</span>
             </button> */}
+            </div>
+            <button
+              onClick={() => onView(article.id)}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-sm font-medium hover:shadow-lg"
+            >
+              Read More
+            </button>
           </div>
-          <button
-            onClick={() => onView(article.id)}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full text-sm font-medium hover:shadow-lg"
-          >
-            Read More
-          </button>
-        </div>
+        )}
       </div>
     </motion.div>
   );

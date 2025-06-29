@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-interface authResponse {
+export interface authResponse {
   id: string;
   name: string;
 }

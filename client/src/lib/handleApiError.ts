@@ -1,3 +1,4 @@
+import { authResponse } from "@/context/AuthContext";
 import { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 
@@ -6,8 +7,8 @@ interface HandleApiErrorOptions {
   router?: {
     push: (path: string) => void;
   };
-  user?: string | null;
-  admin?: string | null;
+  user?: authResponse | null;
+  admin?: authResponse | null;
 }
 
 export function handleApiError({ error, router, user, admin }: HandleApiErrorOptions) {

@@ -60,7 +60,7 @@ ArticleViewModalProps) => {
             {article.title}
           </h2>
           <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-            <span>By {article.author ?? "Unknown"}</span>
+            <span>By {article.authorName ?? "Unknown"}</span>
             <div className="flex items-center space-x-4">
               <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
               <span>{article.readTime} min read</span>

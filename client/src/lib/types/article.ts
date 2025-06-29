@@ -1,7 +1,7 @@
 export interface Article {
   id: string;
   title: string;
-  body: string; 
+  body: string;
   category: string;
   image?: string;
   views: number;
@@ -10,10 +10,17 @@ export interface Article {
   publishedAt: string;
   likes: number;
   dislikes: number;
-  author: string;
+  isBlocked:boolean;
+  authorId:string;
+  authorName:string;
 }
 
-export type PageKey = "dashboard" | "create" | "articles" | "settings" | "profile";
+export type PageKey =
+  | "dashboard"
+  | "create"
+  | "articles"
+  | "settings"
+  | "profile";
 
 export interface ArticleFormData {
   title: string;

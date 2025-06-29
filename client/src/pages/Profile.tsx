@@ -44,6 +44,7 @@ const Profile = () => {
         const data = await getUserArticles(1, 3);
         setArticles(data.articles);
       } catch (error) {
+  console.log(error)
         handleApiError({ error, router, user });
       }
     })();

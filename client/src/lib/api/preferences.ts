@@ -5,7 +5,7 @@ import userInstance from "./axios/user";
 export const getPreferencesForSignup = async () => {
   try {
     const res = await publicInstance.get("/preference/preferences");
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -14,7 +14,7 @@ export const getPreferencesForSignup = async () => {
 export const getPreferences = async () => {
   try {
     const res = await userInstance.get("/preference/user/preferences");
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -23,7 +23,7 @@ export const getPreferences = async () => {
 export const fetchPreferences = async () => {
   try {
     const res = await adminInstance.get("/preference/admin/preferences");
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
