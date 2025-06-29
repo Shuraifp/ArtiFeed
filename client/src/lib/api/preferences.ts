@@ -40,7 +40,7 @@ export const createPreference = async (category: string) => {
 
 export const deletePreference = async (category: string) => {
   try {
-    const res = await adminInstance.delete(`/preference/preferences/${category}`);
+    const res = await adminInstance.delete(`/preference/${category}`);
     return res;
   } catch (error) {
     throw error;

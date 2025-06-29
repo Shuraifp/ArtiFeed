@@ -23,6 +23,19 @@ export class PreferenceController {
     private readonly deletePreferenceUseCase: DeletePreferenceUseCase
   ) {}
 
+  async getAllPreferences(req: Request, res: Response, next: NextFunction) {
+    try {
+      const preferences = await this.getPreferencesUseCase.execute();
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: StatusMessages.SUCCESS,
+        data: { preferences },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+ 
   async getPreferences(req: Request, res: Response, next: NextFunction) {
     try {
       const request = GetUserPreferenceRequest.fromHttp(req)

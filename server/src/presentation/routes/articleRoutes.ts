@@ -15,7 +15,8 @@ import { DislikeArticleUseCase } from "../../application/use-cases/article/Disli
 import { DeleteArticleUseCase } from "../../application/use-cases/article/DeleteArticleUseCase";
 import { LikeArticleUseCase } from "../../application/use-cases/article/LikeArticleUseCase";
 import { BlockArticleUseCase } from "../../application/use-cases/article/BlockArticleUseCase";
-import { AdminBlockArticleUseCase } from "../../application/use-cases/article/AdminBlockArticleUseCase";
+import { AdminToggleBlockArticleUseCase } from "../../application/use-cases/article/AdminToggleBlockArticleUseCase";
+import { GetArticlesForAdminUseCase } from "../../application/use-cases/article/GetArticlesForAdminUseCase";
 
 const articleRepository = new MongoArticleRepository();
 const userRepository = new MongoUserRepository();
@@ -44,7 +45,8 @@ const articleController = new ArticleController(
     articleReactionRepository
   ),
   new BlockArticleUseCase(articleRepository, userRepository),
-  new AdminBlockArticleUseCase(articleRepository)
+  new AdminToggleBlockArticleUseCase(articleRepository),
+  new GetArticlesForAdminUseCase(articleRepository)
 );
 
 const router = Router();
@@ -57,12 +59,12 @@ router.post(
 router.get(
   "/",
   authenticateJWT(Roles.User),
-  articleController.getAllArticles.bind(articleController)
+  articleController.getUnBlockedArticles.bind(articleController)
 );
 router.get(
   "/following",
   authenticateJWT(Roles.User),
-  articleController.getArticles.bind(articleController)
+  articleController.getPreferedArticles.bind(articleController)
 );
 router.get(
   "/user",
@@ -94,10 +96,22 @@ router.post(
   authenticateJWT(Roles.User),
   articleController.blockArticle.bind(articleController)
 );
+
+
+// Admin
+router.get(
+  "/admin",
+  authenticateJWT(Roles.Admin),
+  articleController.getAllArticles.bind(articleController)
+);
 router.post(
   "/:articleId/admin-block",
   authenticateJWT(Roles.Admin),
   articleController.adminBlockArticle.bind(articleController)
 );
-
+router.post(
+  "/:articleId/admin-unblock",
+  authenticateJWT(Roles.Admin),
+  articleController.adminUnBlockArticle.bind(articleController)
+);
 export default router;

@@ -51,6 +51,10 @@ export class Article {
   block(): void {
     this.isBlocked = true;
   }
+  
+  unBlock(): void {
+    this.isBlocked = false;
+  }
 
   incrementViews(): void {
     this.views++;

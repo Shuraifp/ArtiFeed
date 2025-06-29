@@ -43,7 +43,7 @@ export const getArticlesForadmin = async (page: number, limit: number) => {
     const res = await userInstance.get("/article/admin", {
       params: { page, limit },
     });
-    return res.data;
+    return res.data.data;
   } catch (error) {
     throw error;
   }
@@ -127,6 +127,15 @@ export const blockArticle = async (id: string) => {
 export const adminBlockArticle = async (id: string) => {
   try {
     const res = await adminInstance.post(`/article/${id}/admin-block`);
+    return res.data.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const adminUnBlockArticle = async (id: string) => {
+  try {
+    const res = await adminInstance.post(`/article/${id}/admin-Unblock`);
     return res.data.data;
   } catch (error) {
     throw error;

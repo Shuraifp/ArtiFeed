@@ -14,12 +14,13 @@ import { DeleteArticleUseCase } from "../../application/use-cases/article/Delete
 import { LikeArticleUseCase } from "../../application/use-cases/article/LikeArticleUseCase";
 import { DislikeArticleUseCase } from "../../application/use-cases/article/DislikeArticleUseCase";
 import { BlockArticleUseCase } from "../../application/use-cases/article/BlockArticleUseCase";
-import { AdminBlockArticleUseCase } from "../../application/use-cases/article/AdminBlockArticleUseCase";
+import { AdminToggleBlockArticleUseCase } from "../../application/use-cases/article/AdminToggleBlockArticleUseCase";
 import { DeleteArticleRequest } from "../../application/dtos/article/DeleteArticleRequest";
 import { LikeArticleRequest } from "../../application/dtos/article/LikeArticleRequest";
 import { DislikeArticleRequest } from "../../application/dtos/article/DislikeArticleRequest";
 import { BlockArticleRequest } from "../../application/dtos/article/BlockArticleRequest";
-import { AdminBlockArticleRequest } from "../../application/dtos/article/AdminBlockArticleRequest";
+import { AdminToggleBlockArticleRequest } from "../../application/dtos/article/AdminToggleBlockArticleRequest";
+import { GetArticlesForAdminUseCase } from "../../application/use-cases/article/GetArticlesForAdminUseCase";
 
 export class ArticleController {
   constructor(
@@ -32,7 +33,8 @@ export class ArticleController {
     private readonly likeArticleUseCase: LikeArticleUseCase,
     private readonly dislikeArticleUseCase: DislikeArticleUseCase,
     private readonly blockArticleUseCase: BlockArticleUseCase,
-    private readonly adminBlockArticleUseCase: AdminBlockArticleUseCase
+    private readonly adminBlockArticleUseCase: AdminToggleBlockArticleUseCase,
+    private readonly getArticlesForAdminUseCase: GetArticlesForAdminUseCase
   ) {}
 
   async createArticle(req: Request, res: Response, next: NextFunction) {
@@ -49,7 +51,7 @@ export class ArticleController {
     }
   }
 
-  async getArticles(req: Request, res: Response, next: NextFunction) {
+  async getPreferedArticles(req: Request, res: Response, next: NextFunction) {
     try {
       const request = GetArticlesRequest.fromHttp(req);
       const response = await this.getArticlesUseCase.execute(request);
@@ -62,8 +64,8 @@ export class ArticleController {
       next(error);
     }
   }
-  
-  async getAllArticles(req: Request, res: Response, next: NextFunction) {
+
+  async getUnBlockedArticles(req: Request, res: Response, next: NextFunction) {
     try {
       const request = GetAllArticlesRequest.fromHttp(req);
       const response = await this.getAllArticlesUseCase.execute(request);
@@ -76,7 +78,21 @@ export class ArticleController {
       next(error);
     }
   }
-  
+
+  async getAllArticles(req: Request, res: Response, next: NextFunction) {
+    try {
+      const request = GetAllArticlesRequest.fromHttp(req);
+      const response = await this.getArticlesForAdminUseCase.execute(request);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: StatusMessages.SUCCESS,
+        data: response,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getArticlesbyUser(req: Request, res: Response, next: NextFunction) {
     try {
       const request = GetArticlesRequest.fromHttp(req);
@@ -160,13 +176,31 @@ export class ArticleController {
     }
   }
 
-  async adminBlockArticle(req: Request, res: Response, next: NextFunction) {
+  async adminBlockArticle(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const request = AdminBlockArticleRequest.fromHttp(req);
+      const request = AdminToggleBlockArticleRequest.fromHttp(req);
       const response = await this.adminBlockArticleUseCase.execute(request);
       res.status(HttpStatus.OK).json({
         success: true,
         message: "Article blocked by admin",
+        data: { article: response },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async adminUnBlockArticle(req: Request, res: Response, next: NextFunction) {
+    try {
+      const request = AdminToggleBlockArticleRequest.fromHttp(req);
+      const response = await this.adminBlockArticleUseCase.execute(request);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: "Article restored by admin",
         data: { article: response },
       });
     } catch (error) {

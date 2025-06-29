@@ -90,9 +90,26 @@ export class MongoArticleRepository implements IArticleRepository {
     });
   }
 
-  async findAllArticles(): Promise<Article[]> {
-    const docs = await ArticleModel.find();
-    return docs.map(this.toDomain);
+  async findAllArticles(
+    pagination: Pagination
+  ): Promise<{ article: Article; authorName: string }[]> {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+    const docs = await ArticleModel.find()
+      .populate("author", "firstName lastName")
+      .skip(skip)
+      .limit(limit)
+      .sort({ publishedAt: -1 });
+    return docs.map((doc) => {
+      const author = doc.author as unknown as {
+        _id: string;
+        firstName: string;
+        lastName: string;
+      };
+      const authorName = `${author.firstName} ${author.lastName}`;
+      const article = this.toDomain(doc);
+      return { article, authorName };
+    });
   }
 
   async update(article: Article): Promise<Article> {

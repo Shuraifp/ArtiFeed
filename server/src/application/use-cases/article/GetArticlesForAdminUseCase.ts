@@ -6,7 +6,7 @@ import { Pagination } from "../../../domain/repositories/IUserRepository";
 import { ArticleResponse } from "../../dtos/article/ArticleResponse";
 import { GetAllArticlesRequest } from "../../dtos/article/GetAllArticlesRequest";
 
-export class GetAllArticlesUseCase {
+export class GetArticlesForAdminUseCase {
   constructor(private readonly articleRepository: IArticleRepository) {}
 
   async execute(request: GetAllArticlesRequest): Promise<{
@@ -15,15 +15,13 @@ export class GetAllArticlesUseCase {
     currentPage: number;
     totalArticles: number;
   }> {
-    const filters: ArticleFilters = {
-      isBlocked: false,
-    };
+    const filters = {};
 
     const pagination: Pagination = { page: request.page, limit: request.limit };
 
     const [articleResults, total] = await Promise.all([
-      this.articleRepository.findByFilters(filters, pagination),
-      this.articleRepository.count(filters),
+      this.articleRepository.findAllArticles(pagination),
+      this.articleRepository.count(),
     ]);
 
     const totalPages = Math.ceil(total / request.limit);

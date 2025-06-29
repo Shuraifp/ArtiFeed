@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, Search, User, ChevronDown } from "lucide-react";
 import { PageKey } from "@/lib/types/article";
@@ -20,7 +20,7 @@ const Header = ({
   setCurrentPage,
 }: HeaderProps) => {
   const { user } = useAuth()
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const pageNames: Record<PageKey, string> = {
     dashboard: "Dashboard",
     create: "Create Article",
@@ -75,7 +75,7 @@ const Header = ({
           {/* Right section */}
           <div className="flex items-center space-x-3">
             {/* Search */}
-            <motion.div
+            {/* <motion.div
               whileHover={{ scale: 1.02 }}
               className="hidden md:flex items-center bg-gray-50 hover:bg-gray-100 rounded-xl px-4 py-2 transition-colors"
             >
@@ -91,7 +91,7 @@ const Header = ({
               <kbd className="ml-auto text-xs text-gray-400 bg-white px-2 py-1 rounded border">
                 ⌘K
               </kbd>
-            </motion.div>
+            </motion.div> */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

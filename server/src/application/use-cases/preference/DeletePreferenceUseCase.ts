@@ -11,7 +11,7 @@ export class DeletePreferenceUseCase {
       throw new NotFoundError("Preference category not found");
     }
 
-    preference.delete();
-    await this.preferenceRepository.update(preference);
+    // preference.delete();
+    await this.preferenceRepository.delete(request.category);
   }
 }

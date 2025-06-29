@@ -26,7 +26,7 @@ const preferenceController = new PreferenceController(
 const router = Router();
 
 // Public endpoint
-router.get("/preferences", preferenceController.getPreferences.bind(preferenceController));
+router.get("/preferences", preferenceController.getAllPreferences.bind(preferenceController));
 
 // User endpoints
 router.get("/user/preferences", authenticateJWT(Roles.User), preferenceController.getPreferences.bind(preferenceController));
@@ -36,6 +36,6 @@ router.delete("/preferences/:category", authenticateJWT(Roles.User), preferenceC
 // Admin endpoints
 router.get("/admin/preferences", authenticateJWT(Roles.Admin), preferenceController.getPreferences.bind(preferenceController));
 router.post("/", authenticateJWT(Roles.Admin), preferenceController.createPreference.bind(preferenceController));
-router.delete("/admin/preferences/:category", authenticateJWT(Roles.Admin), preferenceController.deletePreference.bind(preferenceController));
+router.delete("/:category", authenticateJWT(Roles.Admin), preferenceController.deletePreference.bind(preferenceController));
 
 export default router;

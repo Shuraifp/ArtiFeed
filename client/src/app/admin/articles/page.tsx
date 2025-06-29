@@ -4,12 +4,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, StepBack, Trash2 } from "lucide-react";
 import { Article } from "@/lib/types/article";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { getArticlesForadmin } from "@/lib/api/article";
+import {
+  adminBlockArticle,
+  adminUnBlockArticle,
+  getArticlesForadmin,
+} from "@/lib/api/article";
 import { handleApiError } from "@/lib/handleApiError";
+import toast from "react-hot-toast";
 
 const ManageArticles = () => {
   const router = useRouter();
@@ -27,7 +32,6 @@ const ManageArticles = () => {
     (async () => {
       try {
         const data = await getArticlesForadmin(page, limit);
-        console.log(data);
         setArticles(data.articles);
         setTotalPages(data.totalPages);
       } catch (error) {
@@ -36,15 +40,26 @@ const ManageArticles = () => {
     })();
   }, [router, admin, page]);
 
-  const handleDelete = (id: string) => {
-    setArticles(articles.filter((article) => article.id !== id));
-    // Call API to delete article
+  const handleDelete = async (id: string) => {
+    try {
+      const { article } = await adminBlockArticle(id);
+      setArticles(articles.map((arti) => (arti.id === id ? article : arti)));
+      toast.success("Article has been Blocked")
+    } catch (error) {
+      handleApiError({ error, router, admin });
+    }
   };
 
-  // const handleView = (id: string) => {
-  //   const article = articles.find((a) => a.id === id);
-  //   if (article) setSelectedArticle(article);
-  // };
+  const handleUnblock = async (id: string) => {
+    try {
+      const { article } = await adminUnBlockArticle(id);
+      setArticles(articles.map((arti) => (arti.id === id ? article : arti)));
+      toast.success("Article has been Restored")
+    } catch (error) {
+      handleApiError({ error, router, admin });
+    }
+  };
+
 
   useEffect(() => {
     if (!admin && !loading) {
@@ -115,7 +130,7 @@ const ManageArticles = () => {
                           {article.title}
                         </p>
                         <p className="font-medium mt-1 text-gray-700">
-                         By {article.author}
+                          By {article.authorName}
                         </p>
                         <p className="text-sm text-gray-500">
                           {article.category} •{" "}
@@ -126,14 +141,25 @@ const ManageArticles = () => {
                           {article.dislikes} 👎
                         </p>
                       </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDelete(article.id)}
-                        className="self-end mt-4 p-2 bg-red-600 text-white rounded-xl"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </motion.button>
+                      {article.isBlocked ? (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleUnblock(article.id)}
+                          className="self-end mt-4 p-2 bg-gray-600 text-white rounded-xl"
+                        >
+                          <StepBack className="w-5 h-5" />
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDelete(article.id)}
+                          className="self-end mt-4 p-2 bg-red-600 text-white rounded-xl"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </motion.button>
+                      )}
                     </div>
                   ))}
                 </AnimatePresence>

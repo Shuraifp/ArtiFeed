@@ -11,7 +11,9 @@ export interface ArticleFilters {
 
 export interface IArticleRepository {
   create(article: Article): Promise<Article>;
-  findById(id: ArticleId): Promise<{ article: Article; authorName: string } | null>;
+  findById(
+    id: ArticleId
+  ): Promise<{ article: Article; authorName: string } | null>;
   findByAuthor(authorId: UserId, pagination: Pagination): Promise<Article[]>;
   findByFilters(
     filters: ArticleFilters,
@@ -23,5 +25,5 @@ export interface IArticleRepository {
   countAll(): Promise<number>;
   getTotalViews(): Promise<number>;
   getCategoryDistribution(): Promise<Record<string, number>>;
-  findAllArticles(): Promise<Article[]>;
+  findAllArticles(pagination: Pagination): Promise<{ article: Article; authorName: string }[]>;
 }
