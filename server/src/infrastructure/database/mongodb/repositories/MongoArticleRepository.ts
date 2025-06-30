@@ -136,6 +136,11 @@ export class MongoArticleRepository implements IArticleRepository {
     await ArticleModel.findByIdAndDelete(id.toString());
   }
 
+  async findAllArticlesForStats(): Promise<Article[]> {
+    const docs = await ArticleModel.find().lean();
+    return docs.map(this.toDomain);
+  }
+
   async count(filters?: ArticleFilters): Promise<number> {
     const query: any = filters ? { isBlocked: filters.isBlocked } : {};
     if (filters?.category) query.category = { $in: filters.category };
@@ -152,13 +157,31 @@ export class MongoArticleRepository implements IArticleRepository {
 
   async getTotalViews(): Promise<number> {
     const aggregation = await ArticleModel.aggregate([
+      { $match: { isBlocked: false } },
       { $group: { _id: null, total: { $sum: "$views" } } },
     ]);
     return aggregation[0]?.total || 0;
   }
 
+  async getAverageLikes(): Promise<number> {
+    const aggregation = await ArticleModel.aggregate([
+      { $match: { isBlocked: false } },
+      { $group: { _id: null, avgLikes: { $avg: "$likes" } } },
+    ]);
+    return aggregation[0]?.avgLikes || 0;
+  }
+
+  async getAverageDislikes(): Promise<number> {
+    const aggregation = await ArticleModel.aggregate([
+      { $match: { isBlocked: false } },
+      { $group: { _id: null, avgDislikes: { $avg: "$dislikes" } } },
+    ]);
+    return aggregation[0]?.avgDislikes || 0;
+  }
+
   async getCategoryDistribution(): Promise<Record<string, number>> {
     const aggregation = await ArticleModel.aggregate([
+      { $match: { isBlocked: false } },
       { $group: { _id: "$category", count: { $sum: 1 } } },
     ]);
     const distribution: Record<string, number> = {};

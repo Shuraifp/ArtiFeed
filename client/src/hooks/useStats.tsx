@@ -17,7 +17,7 @@ export const useStats = () => {
     const fetchStats = async () => {
       try {
         const response = await publicInstance.get("/user/count");
-        setStats(response.data.stats);
+        setStats(response.data.data.stats);
       } catch (err) {
         if (err instanceof AxiosError) {
           setError(err.response?.data.message);

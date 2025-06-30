@@ -21,9 +21,12 @@ export interface IArticleRepository {
   ): Promise<{ article: Article; authorName: string }[]>;
   update(article: Article): Promise<Article>;
   delete(id: ArticleId): Promise<void>;
+  findAllArticlesForStats(): Promise<Article[]>;
   count(filters?: ArticleFilters): Promise<number>;
   countAll(): Promise<number>;
   getTotalViews(): Promise<number>;
+  getAverageLikes(): Promise<number>;
+  getAverageDislikes(): Promise<number>;
   getCategoryDistribution(): Promise<Record<string, number>>;
   findAllArticles(pagination: Pagination): Promise<{ article: Article; authorName: string }[]>;
 }
