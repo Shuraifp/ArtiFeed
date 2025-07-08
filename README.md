@@ -2,7 +2,7 @@
 
 # ArtiFeed – Article Feed Web Application
 
-**FeedIn** is a full-stack article feed web application built using the **MERN stack (MongoDB, Express.js, React, Node.js) + Next.js**. It provides a personalized content experience where users can view articles posted by others, create and manage their own content, and interact with the platform based on their preferences.
+**FeedIn** is a full-stack article feed web application built using the **MERN stack (MongoDB, Express.js, React, Node.js) + Next.js + backend in clean architecture**. It provides a personalized content experience where users can view articles posted by others, create and manage their own content, and interact with the platform based on their preferences.
 
 ##  Live Demo
 
@@ -20,6 +20,7 @@
 
 * **Authentication**: Sign up and log in with secure JWT-based authentication.
 * **Feed View**: See articles posted by others, filtered based on user preferences.
+* **Explore View**: See all articles including those outside of user preferences.
 * **Article Management**:
 
   * Create articles with cover image
@@ -63,15 +64,12 @@ ARTIFEED/
 │
 ├── server/                 # Backend API
 │   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── mappers/
-│   │   ├── middlewares/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── types/
-│   │   └── utils/
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   ├── main/
+│   │   ├── presentation/
+│   │   ├── shared/
 │   ├── .env
 │   └── package.json
 └── README.md
