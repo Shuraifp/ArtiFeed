@@ -11,12 +11,15 @@ interface HandleApiErrorOptions {
   admin?: authResponse | null;
 }
 
-export function handleApiError({ error, router, user, admin }: HandleApiErrorOptions) {
+export function handleApiError({
+  error,
+  router,
+  user,
+  admin,
+}: HandleApiErrorOptions) {
   if (error instanceof AxiosError) {
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
-
-    toast.error(message);
 
     if (router) {
       if (status === 401) {
@@ -30,6 +33,7 @@ export function handleApiError({ error, router, user, admin }: HandleApiErrorOpt
       }
       if (status === 403) return router.push("/blocked");
     }
+    toast.error(message);
   } else {
     toast.error("Something went wrong. Please try again.");
   }

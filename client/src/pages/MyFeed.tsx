@@ -30,8 +30,13 @@ export default function MyFeed() {
   const [exploreArticles, setExploreArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [categoryList, setCategoryList] = useState<string[]>([]);
-  const [followingCategoryList, setFollowingCategoryList] = useState<string[]>([])
+  const [followingCategoryList, setFollowingCategoryList] = useState<string[]>(
+    []
+  );
   const [blockTargetId, setBlockTargetId] = useState<string | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<
+    Map<string, "like" | "dislike">
+  >(new Map());
 
   const [followingPage, setFollowingPage] = useState(1);
   const [explorePage, setExplorePage] = useState(1);
@@ -46,13 +51,12 @@ export default function MyFeed() {
       try {
         const { preferences, userPreferences } = await getPreferences();
         setCategoryList(preferences);
-        setFollowingCategoryList(userPreferences)
+        setFollowingCategoryList(userPreferences);
       } catch (error) {
         handleApiError({ error, router, user });
       }
     })();
   }, [router, user]);
-
 
   useEffect(() => {
     const target = loaderRef.current;
@@ -90,6 +94,18 @@ export default function MyFeed() {
     isLoading,
   ]);
 
+  const setAction = (id: string, action: "like" | "dislike" | null) => {
+    setActionInProgress((prev) => {
+      const next = new Map(prev);
+      if (action) {
+        next.set(id, action);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  };
+
   const loadArticles = async (
     tabType: "following" | "explore",
     currentPage: number
@@ -122,28 +138,37 @@ export default function MyFeed() {
   };
 
   const handleLike = async (id: string) => {
+    if (actionInProgress.get(id)) return;
+    setAction(id, "like");
     try {
       const { article } = await likeArticle(id);
-
+      setSelectedArticle(article)
       setArticles((prev) => prev.map((art) => (art.id === id ? article : art)));
       setExploreArticles((prev) =>
         prev.map((art) => (art.id === id ? article : art))
       );
     } catch (error) {
       handleApiError({ error, router, user });
+    } finally {
+      setAction(id, null);
     }
   };
 
   const handleDislike = async (id: string) => {
+    if (actionInProgress.get(id)) return;
+
+    setAction(id, "dislike");
     try {
       const { article } = await dislikeArticle(id);
-
+      setSelectedArticle(article)
       setArticles((prev) => prev.map((art) => (art.id === id ? article : art)));
       setExploreArticles((prev) =>
         prev.map((art) => (art.id === id ? article : art))
       );
     } catch (error) {
       handleApiError({ error, router, user });
+    } finally {
+      setAction(id, null);
     }
   };
 
@@ -183,7 +208,8 @@ export default function MyFeed() {
   const currentArticles = tab === "following" ? articles : exploreArticles;
   const currentHasMore =
     tab === "following" ? followingHasMore : exploreHasMore;
-  const currentCategoryList = tab === "following" ? followingCategoryList : categoryList;
+  const currentCategoryList =
+    tab === "following" ? followingCategoryList : categoryList;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
@@ -241,7 +267,7 @@ export default function MyFeed() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 0.1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-3xl"
+          className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-r from-blue-400 to-purple-400 pointer-events-none rounded-full blur-3xl"
         />
         {/* Article Grid */}
         <motion.div

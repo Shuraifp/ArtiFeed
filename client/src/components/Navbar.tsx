@@ -60,7 +60,7 @@ const AnimatedNavbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            {["Features", "About"].map((item) => (
+            {/* {["Features", "About"].map((item) => (
               <motion.a
                 key={item}
                 href={`#${item.toLowerCase()}`}
@@ -69,7 +69,7 @@ const AnimatedNavbar = () => {
               >
                 {item}
               </motion.a>
-            ))}
+            ))} */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
